@@ -49,6 +49,7 @@ What I leave behind will stand as the **burning fuel** of my individual passage 
 | Day 3 | [day-3.md](./day-3.md) |
 | Day 4 | [day-4.md](./day-4.md) |
 | Day 5 | [day-5.md](./day-5.md) |
+| Day 7 | [day-7.md](./day-7.md) |
 
 ---
 
