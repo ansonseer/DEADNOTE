@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+wechatpy[cryptography]>=1.8.18,<2
+httpx
+pytest
