@@ -1,0 +1,18 @@
+[
+  {"company": "星桥智能（示例）", "team": "企业 Agent 解决方案团队", "name": "林晓峰（示例）", "title": "解决方案负责人",
+   "channels": {"maimai": "https://example.com/maimai/lin", "linkedin": "https://example.com/in/lin"},
+   "evidence": [{"title": "企业 Agent 从 PoC 到上线的五个坑", "url": "https://example.com/talks/lin-2026", "summary": "在 AICon 分享：先用一个部门的真实流程做验收。"}]},
+  {"company": "星桥智能（示例）", "team": "企业 Agent 解决方案团队", "name": "周雨桐（示例）", "title": "高级解决方案架构师",
+   "channels": {"maimai": "https://example.com/maimai/zhou"},
+   "evidence": [{"title": "知识库问答准确率评测实践", "url": "https://example.com/posts/zhou", "summary": "公众号文章：在客户真实数据上做评测。"}]},
+  {"company": "南岸云（示例）", "team": "云脑平台 行业解决方案部", "name": "陈嘉明（示例）", "title": "行业解决方案负责人",
+   "channels": {"linkedin": "https://example.com/in/chen"},
+   "evidence": [{"title": "金融行业大模型落地路径", "url": "https://example.com/talks/chen", "summary": "云栖大会分享。"}]},
+  {"company": "南岸云（示例）", "team": "ANZ Solutions 团队", "name": "Sarah Wu（示例）", "title": "Senior Solutions Architect, ANZ",
+   "channels": {"linkedin": "https://example.com/in/sarahwu"},
+   "evidence": [{"title": "GenAI for AU mid-market", "url": "https://example.com/posts/sarah", "summary": "LinkedIn 文章：澳洲中型企业的 AI 落地。"}],
+   "tags": ["au_cn_bridge"]},
+  {"company": "海岭科技（示例）", "team": "开放平台解决方案组", "name": "王梓涵（示例）", "title": "解决方案专家",
+   "channels": {"jike": "https://example.com/jike/wang"},
+   "evidence": []}
+]

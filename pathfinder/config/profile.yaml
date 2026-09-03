@@ -1,0 +1,109 @@
+# 你的定位档案。所有"为什么适合你"、"第一条私信"都从这里取材，所以写得越具体越好：
+# 项目名 / 客户类型 / 数字 / 你亲手做的部分。
+name: "孙澳 (Anson Sun)"
+based_in: "Sydney, Australia"
+languages: ["中文（母语）", "English（工作语言）"]
+
+# 一句话定位（给陌生人看的版本）
+headline: "偏 Forward-Deployed 的 AI 解决方案工程师：能和业务聊清楚问题，再用 Agent / Workflow / RAG 快速做出可验证的 PoC。"
+
+# 三句话定位（写给自己、也写给模型看）
+positioning: |
+  不是纯算法，也不是纯产品。我站在业务和模型中间：
+  1) 和业务方一起把模糊的诉求拆成可以被 LLM 解决的具体问题；
+  2) 用 Agent / Workflow / RAG / 结构化输出，在几天内做出能演示、能测的 MVP 或 PoC；
+  3) 把 PoC 推到真实流程里：数据接入、验收指标、权限、幂等、上线后的迭代。
+  在悉尼独立交付过两个企业项目：物流公司的仓库扫码定位系统（客户付费）、宠物诊所的企业微信 AI 客服 Agent（RAG + 队列解耦 + 幂等）。
+  熟悉中英双语的业务沟通和中澳两地的企业环境。
+
+# 目标岗位三类（优先级从高到低）
+target_categories:
+  - id: 1
+    name: "AI 售前 / AI 解决方案工程师 / 大模型解决方案工程师"
+    priority: 1.0
+  - id: 2
+    name: "AI 应用工程师 / Agent Engineer / LLM Application Engineer"
+    priority: 0.85
+  - id: 3
+    name: "技术型管培 / 校招 / Graduate / 0–3 年 AI 岗位"
+    priority: 0.7
+
+# 经历要点：每条含【场景 + 你做了什么 + 结果】。这是私信和作战卡的弹药。
+experience:
+  - title: "悉尼物流公司：仓库扫码定位系统（付费交付）"
+    what: >-
+      独立完成需求梳理到交付培训全流程。直接对接仓库主管和一线拣货员，现场看他们怎么找货，
+      发现瓶颈是 2000+ SKU 的库位全靠老员工记忆。方案：每个库位贴二维码，扫码即入库 / 查位 / 移库，
+      手机浏览器直接用不装 App（仓库员工换机频繁，装 App 落不了地）。含权限与操作日志可追溯。
+    stack: ["Next.js", "TypeScript", "Prisma", "SQLite", "权限与审计日志"]
+    result: >-
+      V1 交付并由客户付费 500 澳元；覆盖入库、查位、移库三个流程；
+      库位查询从依赖特定员工记忆改为任何人扫码即得。有完整演示视频。
+    proof_url: "https://www.loom.com/share/6f2265a872664383ba12f9185d010bae"
+
+  - title: "悉尼宠物诊所：AI 客服 Agent（企业微信，一期已打通）"
+    what: >-
+      解决前台被重复来电占用的问题（营业时间、服务范围、价格、预约规则）。
+      一期走 Meta 通道技术打通但卡在平台企业认证，二期改企业微信重建，把渠道层与业务层边界画死：
+      业务层只收纯字典，不知道底层是哪个平台。核心设计：5 秒响应窗口与大模型生成解耦（收到即入队返回，
+      worker 处理完主动推送）、MsgId 数据库唯一约束做幂等、access_token 提前刷新与失败重试。12 条验收测试先行。
+    stack: ["FastAPI", "wechatpy", "SQLite", "asyncio", "RAG（本地 bge 中文 embedding + sqlite-vec）"]
+    result: >-
+      一期打通完整收发闭环，响应稳定在 1 秒内；RAG 层验收按三个硬指标定义：
+      检索命中率、有据率、正确拒答率，达不到阈值不上线。
+    proof_url: ""
+
+skills:
+  core: ["现场需求拆解与业务沟通", "Agent / Workflow 设计", "RAG 与知识库（含验收指标）", "Prompt / 结构化输出",
+         "PoC 快速交付并让客户付费", "渠道层与业务层解耦", "幂等 / 队列 / 重试等上线细节", "验收测试先行"]
+  tech: ["Python", "FastAPI", "asyncio", "TypeScript", "Next.js", "Prisma", "SQLite", "sqlite-vec", "LLM API（Claude / OpenAI 兼容）",
+         "本地 embedding（bge）", "企业微信 / wechatpy", "AWS 基础"]
+  soft: ["中英双语演示", "跨文化协作", "写作与表达"]
+
+# 约束条件（影响 feasibility 分数）
+constraints:
+  preferred_cities: ["深圳", "上海", "北京", "杭州", "远程"]
+  acceptable_cities: ["广州", "苏州", "成都"]
+  geo_filter: false               # 不做地理过滤：其他城市同样考虑，城市不扣分
+  years_experience: 1             # 用于判断 0–3 年 / 校招资格
+  can_start_from: "2026-09"
+  visa_note: "澳洲工作签证 2028-03 到期；2027 年计划回澳。签证细节以注册移民代理意见为准。"
+
+# 长期目标：影响加分项与人脉标签，不影响岗位本身的匹配
+long_term:
+  super_individual: true
+  au_return_year: 2027
+  au_bridge_bonus: true           # 中澳双足迹公司加分
+  opc_direction: "面向澳洲中小企业的 AI 流程改造 / FDE 服务"
+  content_channels: ["公众号/小红书（中文）", "LinkedIn（英文）", "GitHub"]
+
+# 已有的公开作品（social proof）。作品敲门模式的私信会从这里挑最贴近对方团队的一个。
+proof_assets:
+  - title: "job-agent：五智能体求职管道"
+    url: "https://github.com/ansonseer/job-agent"
+    note: "多智能体流水线，成本 $0.15–0.20 / 公司"
+    kind: repo
+  - title: "crew：AI 可控性控制层"
+    url: "https://github.com/ansonseer/crew"
+    note: "让 Agent 行为可约束、可审计"
+    kind: repo
+  - title: "retail-pricing-tool：零售双语定价工具"
+    url: "https://github.com/ansonseer/retail-pricing-tool"
+    note: "零售场景，中英双语"
+    kind: repo
+  - title: "warehouse-assistant-aws：仓库助手（AWS）"
+    url: "https://github.com/ansonseer/warehouse-assistant-aws"
+    note: "仓库场景的 AI 助手，AWS 部署"
+    kind: repo
+  - title: "sbti-cp：C 端 AI 产品"
+    url: "https://sbti-cp.vercel.app/"
+    note: "上线 72 小时内 10 单付费"
+    kind: product
+  - title: "个人作品页"
+    url: "https://anson-web.vercel.app/"
+    note: "作品集入口"
+    kind: site
+  - title: "仓库扫码定位系统演示视频"
+    url: "https://www.loom.com/share/6f2265a872664383ba12f9185d010bae"
+    note: "付费交付项目的完整演示"
+    kind: demo
