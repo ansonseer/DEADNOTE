@@ -61,6 +61,8 @@ def render_card(conn, settings, o: dict, n: dict, rank_no: int) -> str:
     evidence = [f"{s['title']} — {s['url']}" for s in signals if s.get("url")]
     if o.get("job_url"):
         evidence.append(f"岗位链接 — {o['job_url']}")
+    for u in research.get("sources", []) or []:
+        evidence.append(f"研究来源 — {u}")
     for p in people:
         for e in unj(p.get("evidence"), []) or []:
             if e.get("url"):

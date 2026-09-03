@@ -20,6 +20,7 @@ class Router:
         self.verbose = verbose
         self.force_mock = force_mock if force_mock is not None else os.environ.get("PF_MOCK") == "1"
         self._cache: dict[str, BaseProvider] = {}
+        self.last_citations: list[str] = []   # 最近一次调用里模型联网拿到的来源 URL
 
     # ---- 选择 provider ----
     def provider_name_for(self, task: str) -> str:
@@ -49,6 +50,10 @@ class Router:
     def is_mock(self, task: str) -> bool:
         return self.provider_name_for(task) == "mock"
 
+    def supports_search(self, task: str) -> bool:
+        """这个任务落到的模型能不能自己联网（Kimi $web_search / 智谱 web_search / Claude web_search）。"""
+        return bool(getattr(self.provider_for(task), "supports_search", False))
+
     # ---- 调用 ----
     def call(self, task: str, system: str, user: str, *, context: dict | None = None,
              web_search: bool = False, retries: int = 1) -> dict:
@@ -63,6 +68,7 @@ class Router:
                 res = provider.complete_json(task, system, user_msg, schema, context=context, web_search=web_search)
                 data = coerce(res.data, schema)
                 validate(data, schema)
+                self.last_citations = list(res.citations)
                 self._log(task, provider, res.input_tokens, res.output_tokens, time.time() - started, True, None)
                 if self.verbose:
                     print(f"[router] {task} ← {provider.name}/{provider.model} ok ({res.input_tokens}+{res.output_tokens} tok)")

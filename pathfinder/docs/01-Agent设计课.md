@@ -15,13 +15,14 @@
 | **Dify** | 开源的工作流 / Agent 平台，很多国内企业在用 | 可视化编排、私有化部署；**会用 Dify 本身就是简历信号** | 同上，复杂逻辑还是要写代码 | 第二阶段可选：把 research 阶段搬成 Dify workflow，顺便学 |
 | **Cursor** | 带 AI 的 IDE，帮你写代码 | 写代码 | 它不是 agent 的运行时，也不是载体 | 和 Claude Code 是同类工具，二选一即可。你已经在用 Claude Code |
 | **Claude Code** | 终端里的编码 agent：自带文件、终端、搜索、网页抓取工具 | **建造者 + 操作员**：搭系统、跑 packet、做研究 | 长期定时运行（它是会话式的） | 本项目的建造者；也是 packet 模式下最好用的"研究员" |
+| **Kimi / GLM / DeepSeek API** | 国内模型；Kimi 与智谱自带联网搜索 | 中文招聘语境的研究主力 | 需要跨来源引用严格时要盯着校验 | 研究阶段的默认模型（第 4 节） |
 | **Claude API + tool use / Tool Runner** | 你写工具函数，SDK 帮你跑"模型调用 → 执行工具 → 再调用"的循环 | 自定义工具的自主 agent（如：自主搜索 20 家公司） | 只想调一次模型的场景（杀鸡用牛刀） | 进阶：把 research 阶段升级成自主搜索 agent（第 10 节） |
 | **Claude Agent SDK** | 把 Claude Code 打包成库（自带读写文件/终端/搜索工具） | 想在自己的服务器上跑一个"像 Claude Code 的 agent" | 简单流水线 | 备选，不急 |
 | **Managed Agents（Anthropic 托管）** | Anthropic 帮你跑循环 + 沙箱，可定时 | "每晚自动扫一遍市场" | 数据必须留本地时 | 以后想全自动时再看 |
 | **LangGraph 等编排框架** | 状态图式编排 | 分支复杂、需要回滚/人审的多步流程 | 我们这种线性流水线 | 不用 |
 
 **结论**：
-1. 现在（Pilot）：**Python CLI（本仓库）+ Claude Code 当操作员 + 国内模型 API + 一个搜索 API**。零框架、零平台，每一行都是你的。
+1. 现在（Pilot）：**Python CLI（本仓库）+ Claude Code 当操作员 + 国内模型 API（Kimi / 智谱自带联网，DeepSeek 做分类）**。零框架、零平台，每一行都是你的。
 2. 三个月后：如果每天都在用，加一个飞书 bot 或 Dify 前端只是"壳"，核心不变。
 3. 需要自动化研究时：把 `research` 阶段换成 Claude 的 `web_search` 工具或 Tool Runner 循环（第 10 节），其他阶段不动。
 
@@ -100,37 +101,46 @@ config/*.yaml ─┐
 
 ## 4. 模型分工怎么定
 
-| 任务 | 需要什么能力 | 首选 | 为什么 |
-|---|---|---|---|
-| title_expand 岗位叫法扩展 | 中文招聘黑话、平台命名习惯 | Kimi | 国内语料密度高，便宜 |
-| company_enrich 公司/团队假设 | 国内公司组织常识 | Qwen | 同上；阿里系公司了解更深 |
-| jd_classify 批量打标签 | 便宜、快、稳定 | DeepSeek | 50 条 JD 几分钱 |
-| team_research 团队画像 | 跨来源综合、不编造、带引用 | Claude | 需要判断证据强弱，可直接用 web_search 工具 |
-| people_assess 人物价值 | 判断力 + 分寸感 | Claude | 这里错了会让你发错人 |
-| fit_assess 经历重叠 | 读懂你的档案、保守评估 | Claude | 宁可低估 |
-| outreach_write 私信 | 中文语感 + 克制 | Claude | 文案质量直接决定回复率 |
-| card_write 作战卡叙述 | 压缩、可执行 | Claude | 同上 |
+研究类任务全部交给国内模型，并用它们**自带的联网搜索**，这是 2026-09 的分工表（`config/models.yaml`）：
 
-成本量级（Pilot 一轮，粗估）：国内模型 ~100 次调用几块钱；Claude Opus 5 ~90 次调用、每次几千 token，约 5–10 美元；搜索 API 按次计费另算。**一轮 Pilot 的模型成本低于一顿饭**，所以不要为了省钱降级模型，要为了质量选模型。
+| 任务 | 需要什么能力 | 首选 | 联网 | 为什么 |
+|---|---|---|---|---|
+| title_expand 岗位叫法扩展 | 中文招聘黑话、平台命名习惯 | Kimi K3 | — | 国内语料密度高 |
+| company_enrich 公司/团队假设 | 国内公司组织常识 | GLM-5.3 | — | 国内语境好，可顺手联网 |
+| jd_classify 批量打标签 | 便宜、快、JSON 稳定 | DeepSeek | — | 50 条 JD 几分钱 |
+| team_research 团队画像 | 跨来源综合、不编造、带引用 | Kimi K3 | `$web_search` 内置工具 | 模型自己决定搜什么，服务端执行 |
+| people_assess 人物价值 | 判断力 + 分寸感 | GLM-5.3 | `web_search` 工具 | 可查证公开分享 |
+| fit_assess 经历重叠 | 读懂你的档案、保守评估 | DeepSeek | — | 宁可低估 |
+| outreach_write 私信 | 中文语感 + 克制 | Kimi K3 | — | 想用 Claude 写：routing 改成 anthropic |
+| card_write 作战卡叙述 | 压缩、可执行 | Kimi K3 | — | 同上 |
 
-想换模型：只改 `config/models.yaml`。想加一个 provider（比如豆包）：在 `providers:` 下加一段 `kind: openai_compat` 的配置即可，代码不用动。
+两家的联网接口形状不同，`providers.py` 各做了一种：
+- **Kimi**：声明 `{"type": "builtin_function", "function": {"name": "$web_search"}}`；模型发出 tool_call 后，客户端把 `arguments` 原样作为 tool 结果回传，搜索在 Moonshot 服务端执行；循环直到 `finish_reason != "tool_calls"`。
+- **智谱**：`{"type": "web_search", "web_search": {"enable": true, "search_engine": "search_pro", "search_result": true}}`，一次调用；结果在响应的 `web_search` 字段，链接收进 citations。智谱另有独立的 Web Search API（`PF_SEARCH_PROVIDER=zhipu`），可以给任何模型喂证据。
+
+模型 ID 会变（kimi-k2.5 与 moonshot-v1 已在 2026-08-31 下线，旗舰是 kimi-k3；智谱旗舰 glm-5.3，免费的 glm-4.7-flash 也能跑），配置里有注释，**以官网模型列表为准**。这两段接口按各家公开文档实现，并有假客户端的单元测试覆盖循环与解析，但本仓库没有拿真实 key 跑过：第一次接入请用 `pf research --company 某一家 -v` 跑单家验证。
+
+成本量级（Pilot 一轮，粗估）：国内模型 ~150 次调用，几块到十几块人民币；联网搜索按各家计费另算。**一轮 Pilot 的模型成本低于一顿饭**，所以不要为了省钱降级模型。
+
+想换模型：只改 `config/models.yaml`。想加一个 provider（比如豆包）：在 `providers:` 下加一段 `kind: openai_compat` 的配置即可。
 
 ---
 
 ## 5. 工具与证据规则
 
-这个系统只有一种"工具"：**搜索**（`search.py`）。四种模式：
+这个系统只有一种"工具"：**搜索**。研究阶段拿证据有四条路（`PF_SEARCH_PROVIDER`）：
 
 | 模式 | 怎么工作 | 什么时候用 |
 |---|---|---|
-| `none`（默认） | 不搜；`discover` 输出查询清单，`research` 导出 packet | 没有 API key；或你想亲自看 |
-| `tavily` / `serper` / `bocha` | 先搜证据，再把搜索结果贴给模型综合 | 想自动化；bocha 对中文更友好 |
-| `claude_web` | `team_research` 时 Claude 自己用服务端 `web_search` 工具边搜边写 | 最省事，引用自带 |
-| packet（贯穿所有模式） | 把 prompt + schema 打成一个 Markdown，交给 Claude Code / Kimi 网页版 去做，再 `pf packet ingest` | 零 key 跑 Pilot；或某一家想人工深挖 |
+| `native`（推荐） | 研究模型用自己的联网工具边搜边写：Kimi `$web_search` / 智谱 `web_search` / Claude `web_search` | 有 Kimi 或智谱 key |
+| `zhipu` / `bocha` / `tavily` / `serper` | 先用搜索 API 拿证据，再把结果贴给模型综合 | 想让不会联网的模型（DeepSeek）也能研究 |
+| `none` | 不搜；`discover` 输出查询清单，`research` 导出 packet | 没有 key；或你想亲自看 |
+| packet（贯穿所有模式） | 把 prompt + schema 打成 Markdown，交给 Claude Code / Kimi 网页版去做，再 `pf packet ingest` | 零 key 跑 Pilot；或某一家想人工深挖 |
 
 **证据规则**（`research.py`）：
-- 没有搜索、又不是 mock 时，`research` **拒绝调用模型**，改为导出 packet。原因：让模型"凭印象"写团队近况，得到的是看起来对的错话。
+- 模型不能联网、也没有搜索 API、又不是 mock 时，`research` **拒绝调用模型**，改为导出 packet。原因：让模型"凭印象"写团队近况，得到的是看起来对的错话。
 - 每条 signal 必须有 URL；`team.verified=1` 只在"有真实 URL 且置信度 ≥ 0.6"时成立；未验证的团队在评分里方向分 ×0.7。
+- 模型联网时看过的页面（citations）会存进团队研究的 `sources`，作战卡"证据"一节会列出。
 
 ---
 
@@ -184,7 +194,7 @@ config/*.yaml ─┐
 
 什么时候值得：当你每周要研究 20 家以上公司、且搜索 API 已经配好时。
 
-方案 A（最省事）：`PF_SEARCH_PROVIDER=claude_web`。`AnthropicProvider` 会给 Claude 挂上 `web_search_20260209` 工具，最多 8 次搜索，处理 `pause_turn` 续跑，引用自动收集。已经实现，只差一个 key。
+方案 A（最省事，已实现）：`PF_SEARCH_PROVIDER=native`。Kimi 用内置 `$web_search` 循环，智谱用 `web_search` 工具，Claude 用服务端 `web_search_20260209`；引用自动收集进 `sources`。只差一个 key。
 
 方案 B（完全自定义）：用 Anthropic SDK 的 Tool Runner，把 `search.py` 的 `search()` 和 `db.py` 的写入函数暴露成工具，让模型决定搜什么、搜几次、什么时候停。适合加入"读官网招聘页"之类的自定义工具。代价：不可复现、更贵、要加护栏（最大步数、域名白名单）。
 

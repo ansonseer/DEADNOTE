@@ -55,7 +55,10 @@ def cmd_status(args, conn=None, router=None, searcher=None):
     c = m["counts"]
     print(f"公司 {c['companies']}（pilot {c['pilot_companies']}）｜团队 {c['teams']}（已验证 {c['verified_teams']}）｜岗位 {c['jobs']}（相关 {c['relevant_jobs']}）"
           f"｜人物 {c['people']}｜机会 {c['opportunities']}｜触点 {c['touchpoints']}｜作品 {c['assets']}")
-    print(f"搜索：{searcher.name}{'' if searcher.enabled else '（未配置 → 研究阶段会导出 packet）'}；claude_web={os.environ.get('PF_SEARCH_PROVIDER') == 'claude_web'}")
+    from .search import use_native_search
+    native = use_native_search() and router.supports_search("team_research")
+    mode = "native（研究模型自己联网）" if native else (searcher.name if searcher.enabled else "none（未配置 → 研究阶段会导出 packet）")
+    print(f"研究证据来源：{mode}")
     print("模型分工（实际生效）：")
     print(table(["任务", "provider", "model"], [list(r) for r in router.describe()]))
     print(f"模型调用 {m['llm_calls']} 次，tokens {m['tokens_in']} 入 / {m['tokens_out']} 出")

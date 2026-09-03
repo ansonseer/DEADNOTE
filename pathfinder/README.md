@@ -27,13 +27,13 @@ pf demo --reset      # 虚构示例 + mock 模型：跑完 11 步，打印日报
 
 ## 架构一句话
 
-**模型做判断，代码做记账。** 8 个模型任务（每个都有 prompt / JSON schema / 校验 / mock），11 步流水线由代码编排，评分和跟进节奏是确定性的、可解释的、改配置就能调。国内模型（DeepSeek / Kimi / Qwen）负责中文招聘语境，Claude 负责跨来源综合与文案，Claude Code 负责搭建和当"研究员"。没有 API key 也能通过 packet 模式跑完整个 Pilot。
+**模型做判断，代码做记账。** 8 个模型任务（每个都有 prompt / JSON schema / 校验 / mock），11 步流水线由代码编排，评分和跟进节奏是确定性的、可解释的、改配置就能调。研究主力是国内模型：Kimi K3 用内置 `$web_search` 联网做团队研究，GLM-5.3 用 `web_search` 工具做公司与人物判断，DeepSeek 做批量分类；Claude 是可选的写作备选；Claude Code 负责搭建和当"研究员"。没有 API key 也能通过 packet 模式跑完整个 Pilot。
 
 ```
 config/*.yaml ──► stages/（scan → discover → research → people → rank → outreach → cards → brief）
                      │ prompt + schema                       ▲ 确定性评分 / 状态机
                      ▼                                       │
-               llm/router ──► Claude / DeepSeek / Kimi / Qwen / mock ──► SQLite（db.py）──► Markdown（templates/）
+               llm/router ──► Kimi K3 / GLM-5.3 / DeepSeek / Claude(可选) / mock ──► SQLite（db.py）──► Markdown（templates/）
 ```
 
 ## 文档
@@ -47,6 +47,7 @@ config/*.yaml ──► stages/（scan → discover → research → people → 
 | [docs/04-触达文案框架](docs/04-触达文案框架.md) | 第一条私信、四种开场、follow-up、转岗位、渠道差异 |
 | [docs/05-Pilot两周运行手册](docs/05-Pilot两周运行手册.md) | 20 → 50 → 30 → 10 的逐日计划与判断标准 |
 | [docs/06-长期战略](docs/06-长期战略-超级个体与澳洲FDE.md) | 2026–2028 时间线、三条线并行、回澳三路径、OPC 雏形、人脉资产、内容飞轮 |
+| [docs/07-架构](docs/07-架构.md) | 三层分离、模型调用解剖、证据规则、数据模型、CRM 状态机（mermaid） |
 
 ## 原则
 

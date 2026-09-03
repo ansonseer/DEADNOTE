@@ -127,3 +127,114 @@ def test_research_without_evidence_exports_packet_when_not_mock(env, monkeypatch
     msg = research.research_company(conn, router, searcher, settings, {"id": cid, "name": "无证据公司", "au_footprint": 0})
     assert "packet" in msg and "编造" in msg
     assert list((tmp / "packets").glob("team_research__*.md"))
+
+
+# ---------------------------------------------------------------------------
+# 国内模型的联网接口：用假客户端验证循环与解析逻辑（不需要真实 key）
+# ---------------------------------------------------------------------------
+
+class _Obj:
+    def __init__(self, **kw):
+        self.__dict__.update(kw)
+
+
+def _resp(content, finish_reason="stop", tool_calls=None, web_search=None):
+    msg = _Obj(content=content, tool_calls=tool_calls)
+    r = _Obj(choices=[_Obj(message=msg, finish_reason=finish_reason)], usage=_Obj(prompt_tokens=10, completion_tokens=5))
+    if web_search is not None:
+        r.web_search = web_search
+    return r
+
+
+class _FakeChat:
+    def __init__(self, responses):
+        self.responses = list(responses)
+        self.calls = []
+
+    def create(self, **kwargs):
+        self.calls.append(kwargs)
+        return self.responses.pop(0)
+
+
+def _provider(monkeypatch, name, cfg):
+    monkeypatch.setenv(cfg["api_key_env"], "test-key")
+    from pathfinder.llm.providers import OpenAICompatProvider
+    return OpenAICompatProvider(name, cfg)
+
+
+def test_kimi_builtin_web_search_loop(monkeypatch):
+    prov = _provider(monkeypatch, "kimi", {"base_url": "https://api.moonshot.cn/v1", "model": "kimi-k3",
+                                           "api_key_env": "MOONSHOT_API_KEY", "web_search": "moonshot_builtin", "max_search_uses": 3})
+    assert prov.supports_search
+    tc = _Obj(id="call_1", function=_Obj(name="$web_search", arguments='{"search_query": "阿里云 百炼 解决方案"}'))
+    final = '```json\n{"team_name": "T", "url": "https://example.com/a"}\n```'
+    chat = _FakeChat([_resp(None, finish_reason="tool_calls", tool_calls=[tc]), _resp(final)])
+    prov.client = _Obj(chat=_Obj(completions=chat))
+    res = prov.complete_json("team_research", "sys", "user", {}, web_search=True)
+    assert res.data["team_name"] == "T"
+    assert res.citations == ["https://example.com/a"]
+    # 第一次带工具声明；第二次把 arguments 原样作为 tool 结果回传
+    assert chat.calls[0]["tools"] == [{"type": "builtin_function", "function": {"name": "$web_search"}}]
+    tool_msg = [m for m in chat.calls[1]["messages"] if m.get("role") == "tool"][0]
+    assert tool_msg["tool_call_id"] == "call_1" and tool_msg["content"] == '{"search_query": "阿里云 百炼 解决方案"}'
+    assert "response_format" not in chat.calls[0]
+
+
+def test_zhipu_web_search_tool(monkeypatch):
+    prov = _provider(monkeypatch, "zhipu", {"base_url": "https://open.bigmodel.cn/api/paas/v4", "model": "glm-5.3",
+                                            "api_key_env": "ZHIPU_API_KEY", "web_search": "zhipu_tool", "search_engine": "search_pro"})
+    chat = _FakeChat([_resp('{"ok": true}', web_search=[{"title": "x", "link": "https://example.com/z", "content": "..."}])])
+    prov.client = _Obj(chat=_Obj(completions=chat))
+    res = prov.complete_json("team_research", "sys", "user", {}, web_search=True)
+    assert res.data == {"ok": True} and res.citations == ["https://example.com/z"]
+    tool = chat.calls[0]["tools"][0]
+    assert tool["type"] == "web_search" and tool["web_search"]["enable"] is True and tool["web_search"]["search_engine"] == "search_pro"
+
+
+def test_plain_provider_json_mode_and_fallback(monkeypatch):
+    prov = _provider(monkeypatch, "deepseek", {"base_url": "https://api.deepseek.com", "model": "deepseek-chat",
+                                               "api_key_env": "DEEPSEEK_API_KEY"})
+    assert not prov.supports_search
+    chat = _FakeChat([_resp('{"category_id": 1}')])
+    prov.client = _Obj(chat=_Obj(completions=chat))
+    res = prov.complete_json("jd_classify", "sys", "user", {})
+    assert res.data["category_id"] == 1 and chat.calls[0]["response_format"] == {"type": "json_object"}
+    assert "json" in chat.calls[0]["messages"][0]["content"].lower()
+
+
+def test_zhipu_searcher_parses_results(monkeypatch):
+    from pathfinder import search
+    monkeypatch.setattr(search, "_post_json", lambda url, payload, headers, timeout=30: {
+        "search_result": [{"title": "t", "link": "https://example.com/r", "content": "c", "publish_date": "2026-08-01"}]})
+    s = search.ZhipuSearcher("k", "search_std")
+    out = s.search("测试", n=5)
+    assert out[0].url == "https://example.com/r" and out[0].date == "2026-08-01"
+    monkeypatch.setenv("PF_SEARCH_PROVIDER", "zhipu"); monkeypatch.setenv("ZHIPU_API_KEY", "k")
+    assert search.get_searcher().name == "zhipu"
+    monkeypatch.setenv("PF_SEARCH_PROVIDER", "native")
+    assert search.use_native_search()
+
+
+def test_research_uses_native_search_when_provider_supports_it(env, monkeypatch):
+    conn, router, searcher, settings, tmp = env
+    from pathfinder.db import insert
+    from pathfinder.stages import research
+    cid = insert(conn, "companies", {"name": "联网公司", "tier": 3, "status": "pilot"})
+    insert(conn, "teams", {"company_id": cid, "name": "某团队", "confidence": 0.3})
+    monkeypatch.setenv("PF_SEARCH_PROVIDER", "native")
+    seen = {}
+
+    def fake_call(task, system, user, *, context=None, web_search=False, retries=1):
+        seen["web_search"] = web_search
+        from pathfinder.llm.mock import mock_result
+        router.last_citations = ["https://example.com/src"]
+        return mock_result(task, context or {})
+
+    monkeypatch.setattr(router, "supports_search", lambda task: True)
+    monkeypatch.setattr(router, "is_mock", lambda task: False)
+    monkeypatch.setattr(router, "call", fake_call)
+    msg = research.research_company(conn, router, searcher, settings, {"id": cid, "name": "联网公司", "au_footprint": 0})
+    assert seen["web_search"] is True and "信号" in msg
+    from pathfinder.db import one, unj
+    team = one(conn, "SELECT research FROM teams WHERE company_id = ? AND research IS NOT NULL", (cid,))
+    assert unj(team["research"])["sources"] == ["https://example.com/src"]

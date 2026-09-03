@@ -1,8 +1,8 @@
 """阶段 4-5：团队研究 + 业务背景研究。
 
 原则：没有证据来源的研究不做。
-- 有搜索 API：先搜证据，再让 Claude 综合；
-- PF_SEARCH_PROVIDER=claude_web：让 Claude 自己边搜边写（服务端 web_search 工具）；
+- PF_SEARCH_PROVIDER=native：让研究模型自己联网（Kimi $web_search / 智谱 web_search / Claude web_search）边搜边写；
+- 配了搜索 API（zhipu / bocha / tavily / serper）：先搜证据，再让模型综合；
 - 都没有且不是 mock：导出 packet，交给带搜索的人/Agent；
 每条 signal 必须带 URL，团队 verified 只在证据充分时置 1。
 """
@@ -11,7 +11,7 @@ from __future__ import annotations
 from ..db import find_company, insert, j, one, pilot_companies, rows, unj, update, upsert_team
 from ..llm import prompts
 from ..packets import export_packet
-from ..search import use_claude_web
+from ..search import use_native_search
 
 RESEARCH_QUERIES = [
     "{company} 大模型 解决方案 客户 案例",
@@ -45,7 +45,7 @@ def research_company(conn, router, searcher, settings, company: dict, packet: bo
         return f"{company['name']}：还没有团队假设，先跑 pf scan"
     if any(t.get("research") for t in teams) and not force:
         return f"{company['name']}：已有研究结果（--force 可重做）"
-    web = use_claude_web() and router.provider_name_for("team_research") == "anthropic"
+    web = use_native_search() and router.supports_search("team_research")
     evidence = [] if web else gather_evidence(conn, searcher, company, teams)
     system, user = prompts.team_research(company, teams, evidence, settings.taxonomy, web_search=web)
     context = {"company_id": company["id"], "company_name": company["name"],
@@ -54,9 +54,11 @@ def research_company(conn, router, searcher, settings, company: dict, packet: bo
     no_evidence = not evidence and not web and not router.is_mock("team_research")
     if packet or no_evidence:
         p = export_packet("team_research", context, system, user, company["name"])
-        reason = "（未配置搜索，为避免模型凭空编造，改为导出 packet）" if no_evidence and not packet else ""
+        reason = "（没有联网能力也没有搜索 API，为避免模型凭空编造，改为导出 packet）" if no_evidence and not packet else ""
         return f"{company['name']}：已导出 packet {p} {reason}"
-    result = router.call("team_research", system, user, context=context, web_search=web)
+    result = dict(router.call("team_research", system, user, context=context, web_search=web))
+    if router.last_citations:
+        result["sources"] = router.last_citations[:20]   # 模型联网时看过的页面，作战卡"证据"里会列出
     return ingest_research(conn, settings, context, result)
 
 
