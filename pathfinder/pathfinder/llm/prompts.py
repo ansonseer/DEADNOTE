@@ -21,6 +21,10 @@ def profile_brief(profile: dict) -> str:
     exp = "\n".join(
         f"- {e.get('title')}：{e.get('what')}；结果：{e.get('result')}" for e in profile.get("experience", [])
     )
+    assets = "；".join(
+        f"{a.get('title')}（{a.get('note')}）{a.get('url')}" if isinstance(a, dict) else str(a)
+        for a in profile.get("proof_assets", [])[:7]
+    )
     return (
         f"姓名：{profile.get('name')}｜常驻：{profile.get('based_in')}\n"
         f"定位：{profile.get('headline')}\n{profile.get('positioning', '').strip()}\n"
@@ -31,7 +35,8 @@ def profile_brief(profile: dict) -> str:
         f"城市偏好 {profile.get('constraints', {}).get('preferred_cities')}；"
         f"最早入职 {profile.get('constraints', {}).get('can_start_from')}\n"
         f"长期：{profile.get('long_term', {}).get('opc_direction')}；"
-        f"{profile.get('long_term', {}).get('au_return_year')} 年计划回澳洲。"
+        f"{profile.get('long_term', {}).get('au_return_year')} 年计划回澳洲。\n"
+        f"公开作品（可在私信里作为作品敲门的素材）：{assets or '暂无'}"
     )
 
 

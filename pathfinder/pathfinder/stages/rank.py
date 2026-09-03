@@ -66,6 +66,8 @@ def fresh_signal_days(conn, team_id: int | None) -> int | None:
 
 def city_factor(city: str | None, profile: dict) -> float:
     c = profile.get("constraints", {})
+    if c.get("geo_filter") is False:
+        return 1.0   # 不做地理过滤：任何城市都不扣分
     if not city:
         return 0.6
     if any(p in city or city in p for p in c.get("preferred_cities", [])):
