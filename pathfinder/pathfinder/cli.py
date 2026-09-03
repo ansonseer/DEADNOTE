@@ -64,6 +64,22 @@ def cmd_status(args, conn=None, router=None, searcher=None):
     print(f"模型调用 {m['llm_calls']} 次，tokens {m['tokens_in']} 入 / {m['tokens_out']} 出")
 
 
+def cmd_doctor(args):
+    from . import doctor
+    from .search import use_native_search
+    conn, router, searcher, st = _ctx(args)
+    rows_, routing = doctor.run(st, router, only=args.provider, do_search=args.search)
+    print("Provider 体检" + ("（含联网测试）" if args.search else "（加 --search 测联网）"))
+    print(table(["provider", "配置的模型", "key", "模型是否存在", "JSON 调用", "联网搜索"],
+                [[r["provider"], r["model"], r["key"], r["models"], r["json"], r["search"]] for r in rows_]))
+    print("\n任务 → 实际生效的模型")
+    print(table(["任务", "provider", "model"], [list(r) for r in routing]))
+    native = use_native_search() and router.supports_search("team_research")
+    print(f"\n研究证据来源：{'native（研究模型自己联网）' if native else (searcher.name if searcher.enabled else 'none → 研究阶段会导出 packet')}")
+    if any(r["key"] == "✓" for r in rows_) and not any("✓" in r["json"] for r in rows_):
+        print("\n提示：有 key 但没有一个 JSON 调用成功，多半是网络（代理 / 防火墙）或 key 无效。")
+
+
 def cmd_demo(args):
     """demo 永远写到 <data_dir>/demo/，不会碰你的真实数据。"""
     from .demo import run_demo
@@ -256,6 +272,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("init", help="建库 + 载入种子公司 + 筛选 pilot").set_defaults(fn=cmd_init)
     sub.add_parser("status", help="系统状态与模型分工").set_defaults(fn=cmd_status)
+    dr = sub.add_parser("doctor", help="体检：key / 模型名 / JSON 调用 / 联网搜索"); dr.add_argument("--search", action="store_true", help="同时测试联网搜索"); dr.add_argument("--provider", help="只测某一个 provider"); dr.set_defaults(fn=cmd_doctor)
     d = sub.add_parser("demo", help="用虚构示例数据 + mock 模型跑通整条管道"); d.add_argument("--reset", action="store_true"); d.set_defaults(fn=cmd_demo)
 
     for name, fn, helptext in (("scan", cmd_scan, "市场扫描：种子 → 筛选 → 团队假设"), ("discover", cmd_discover, "岗位发现：叫法扩展 → 搜索 → 分类"),

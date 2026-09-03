@@ -32,6 +32,14 @@ cp .env.example .env            # 填 key；不填也能跑 demo 和 packet 模�
 pf demo --reset                 # 用虚构示例 + mock 模型跑一遍，看作战卡长什么样
 ```
 
+## 第 0 步：体检
+
+```bash
+pf doctor            # key 是否配上、模型 ID 在平台上是否存在、能否返回合法 JSON
+pf doctor --search   # 再测一次联网搜索（Kimi $web_search / 智谱 web_search）
+```
+任何一列打 ✗ 都先解决它再往下跑：缺 key 看 `.env`；模型不存在改 `config/models.yaml`；连接错误看网络代理。
+
 ## 三种运行模式
 
 1. **mock**（`--mock` 或 `PF_MOCK=1`）：不调任何模型，用来看流程、写测试、演示。

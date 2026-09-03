@@ -238,3 +238,26 @@ def test_research_uses_native_search_when_provider_supports_it(env, monkeypatch)
     from pathfinder.db import one, unj
     team = one(conn, "SELECT research FROM teams WHERE company_id = ? AND research IS NOT NULL", (cid,))
     assert unj(team["research"])["sources"] == ["https://example.com/src"]
+
+
+def test_doctor_reports_without_network(env, monkeypatch):
+    """没有 key 时 doctor 只报告缺 key；有 key 但网络不通时报告失败而不是崩溃。"""
+    conn, router, searcher, settings, tmp = env
+    from pathfinder import doctor
+    for k in ("MOONSHOT_API_KEY", "ZHIPU_API_KEY", "DEEPSEEK_API_KEY", "DASHSCOPE_API_KEY", "ANTHROPIC_API_KEY"):
+        monkeypatch.delenv(k, raising=False)
+    rows_, routing = doctor.run(settings, router)
+    assert rows_ and all(r["key"].startswith("✗") for r in rows_)
+    assert len(routing) == 8
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "bad")
+    monkeypatch.setattr(doctor, "list_models", lambda cfg: "无法列出（测试）")
+    from pathfinder.llm import providers as prov
+
+    class _Boom:
+        supports_search = False
+        def complete_json(self, *a, **k):
+            raise prov.ProviderError("network down")
+
+    monkeypatch.setattr(doctor, "build_provider", lambda name, cfg: _Boom())
+    rows_, _ = doctor.run(settings, router, only="deepseek")
+    assert rows_[0]["key"] == "✓" and rows_[0]["json"].startswith("✗")

@@ -23,6 +23,8 @@
 cd pathfinder
 pip install -e .
 pf demo --reset      # 虚构示例 + mock 模型：跑完 11 步，打印日报和第一张作战卡
+cp .env.example .env # 填入 Kimi / 智谱 / DeepSeek 的 key
+pf doctor --search   # 体检：key、模型名、JSON 调用、联网搜索
 ```
 
 ## 架构一句话
@@ -40,14 +42,14 @@ config/*.yaml ──► stages/（scan → discover → research → people → 
 
 | 文件 | 内容 |
 |---|---|
-| [docs/00-总览与操作手册](docs/00-总览与操作手册.md) | 11 步 ↔ 命令、三种运行模式、第一次真正使用 |
-| [docs/01-Agent设计课](docs/01-Agent设计课.md) | **Coze / Dify / Cursor / Claude Code / SDK 怎么选**；Agent 的解剖；三层分离；模型分工；证据规则；评估；三个练习 |
-| [docs/02-评分规则与优先级](docs/02-评分规则与优先级.md) | Fit Score 公式、A1/A2/B/C、路径阶梯、怎么校准 |
-| [docs/03-找人与人脉路径](docs/03-找人与人脉路径.md) | 找谁、去哪找、路径怎么升级、节奏、人脉账户、边界 |
-| [docs/04-触达文案框架](docs/04-触达文案框架.md) | 第一条私信、四种开场、follow-up、转岗位、渠道差异 |
-| [docs/05-Pilot两周运行手册](docs/05-Pilot两周运行手册.md) | 20 → 50 → 30 → 10 的逐日计划与判断标准 |
-| [docs/06-长期战略](docs/06-长期战略-超级个体与澳洲FDE.md) | 2026–2028 时间线、三条线并行、回澳三路径、OPC 雏形、人脉资产、内容飞轮 |
-| [docs/07-架构](docs/07-架构.md) | 三层分离、模型调用解剖、证据规则、数据模型、CRM 状态机（mermaid） |
+| [docs/00-manual](docs/00-manual.md) | 11 步 ↔ 命令、三种运行模式、第一次真正使用 |
+| [docs/01-agent-design-course](docs/01-agent-design-course.md) | **Coze / Dify / Cursor / Claude Code / SDK 怎么选**；Agent 的解剖；三层分离；模型分工；证据规则；评估；三个练习 |
+| [docs/02-scoring](docs/02-scoring.md) | Fit Score 公式、A1/A2/B/C、路径阶梯、怎么校准 |
+| [docs/03-people-and-paths](docs/03-people-and-paths.md) | 找谁、去哪找、路径怎么升级、节奏、人脉账户、边界 |
+| [docs/04-outreach](docs/04-outreach.md) | 第一条私信、四种开场、follow-up、转岗位、渠道差异 |
+| [docs/05-pilot-runbook](docs/05-pilot-runbook.md) | 20 → 50 → 30 → 10 的逐日计划与判断标准 |
+| [docs/06-long-term-strategy](docs/06-long-term-strategy.md) | 2026–2028 时间线、三条线并行、回澳三路径、OPC 雏形、人脉资产、内容飞轮 |
+| [docs/07-architecture](docs/07-architecture.md) | 三层分离、模型调用解剖、证据规则、数据模型、CRM 状态机（mermaid） |
 
 ## 原则
 
