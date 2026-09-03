@@ -1,0 +1,43 @@
+# 模型分工表：哪个任务交给哪个模型。
+# 原则：中文岗位语义 / 国内语境 → 国内模型；跨来源综合判断、写给人看的文案 → Claude；
+#      记账、评分、排期 → 不用模型，代码决定（可解释、可复现）。
+providers:
+  anthropic:
+    kind: anthropic
+    model: claude-opus-5
+    effort: high            # low | medium | high | xhigh | max
+    max_tokens: 16000
+    api_key_env: ANTHROPIC_API_KEY
+  deepseek:
+    kind: openai_compat
+    base_url: https://api.deepseek.com
+    model: deepseek-chat
+    api_key_env: DEEPSEEK_API_KEY
+    json_mode: true
+  kimi:
+    kind: openai_compat
+    base_url: https://api.moonshot.cn/v1
+    model: kimi-latest
+    api_key_env: MOONSHOT_API_KEY
+    json_mode: true
+  qwen:
+    kind: openai_compat
+    base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    model: qwen-plus
+    api_key_env: DASHSCOPE_API_KEY
+    json_mode: true
+  mock:
+    kind: mock
+
+# 任务 → 首选 provider。找不到 key 时按 fallback_order 依次降级，最后落到 mock。
+routing:
+  title_expand: kimi          # 中文岗位名扩展（同义、黑话、校招叫法）
+  company_enrich: qwen        # 公司 BU / 团队假设、国内语境
+  jd_classify: deepseek       # 批量给 JD 打标签（便宜、快）
+  fit_assess: anthropic       # 你的经历 vs JD 的重叠度判断（需要读 profile）
+  team_research: anthropic    # 综合新闻 / 分享 / 产品动态 → 团队画像（可带 web_search）
+  people_assess: anthropic    # 判断人物角色、人脉价值、为什么联系
+  outreach_write: anthropic   # 第一条私信 + follow-up
+  card_write: anthropic       # 作战卡里的叙述段落
+
+fallback_order: [anthropic, deepseek, kimi, qwen, mock]

@@ -1,0 +1,65 @@
+# 你的定位档案。所有"为什么适合你"、"第一条私信"都从这里取材，所以请写具体：
+# 项目名 / 客户类型 / 数字 / 你亲手做的部分。带 TODO 的地方请替换。
+name: "TODO 你的名字"
+based_in: "Sydney, Australia"
+languages: ["中文（母语）", "English（工作语言）"]
+
+# 一句话定位（给陌生人看的版本）
+headline: "偏 Forward-Deployed 的 AI 解决方案工程师：能和业务聊清楚问题，再用 Agent / Workflow / RAG 快速做出可验证的 PoC。"
+
+# 三句话定位（写给自己、也写给模型看）
+positioning: |
+  不是纯算法，也不是纯产品。我站在业务和模型中间：
+  1) 和业务方一起把模糊的诉求拆成可以被 LLM 解决的具体问题；
+  2) 用 Agent / Workflow / RAG / 结构化输出，在几天内做出能演示、能测的 MVP 或 PoC；
+  3) 把 PoC 推到真实流程里：数据接入、评测、权限、成本、上线后的迭代。
+  我在悉尼做过企业 AI 落地，熟悉中英双语的业务沟通和中澳两地的企业环境。
+
+# 目标岗位三类（优先级从高到低）
+target_categories:
+  - id: 1
+    name: "AI 售前 / AI 解决方案工程师 / 大模型解决方案工程师"
+    priority: 1.0
+  - id: 2
+    name: "AI 应用工程师 / Agent Engineer / LLM Application Engineer"
+    priority: 0.85
+  - id: 3
+    name: "技术型管培 / 校招 / Graduate / 0–3 年 AI 岗位"
+    priority: 0.7
+
+# 经历要点：每条尽量含【场景 + 你做了什么 + 结果】。这是私信和作战卡的弹药。
+experience:
+  - title: "TODO 悉尼企业 AI 落地项目（例：为某物流/零售/专业服务公司做内部流程 AI 化）"
+    what: "TODO 与业务负责人梳理流程 → 设计 Agent/Workflow → 接入数据 → 做 PoC → 评测与上线"
+    stack: ["LLM API", "Agent / Workflow", "RAG", "Structured Output", "评测"]
+    result: "TODO 可量化结果（时间节省 / 准确率 / 采纳率 / 覆盖流程数）"
+    proof_url: ""
+  - title: "TODO 第二个项目（个人作品 / 开源 / 竞赛均可）"
+    what: "TODO"
+    stack: []
+    result: "TODO"
+    proof_url: ""
+
+skills:
+  core: ["需求拆解与业务沟通", "Agent / Workflow 设计", "RAG 与知识库", "Prompt / 结构化输出", "PoC 快速交付", "评测与迭代"]
+  tech: ["Python", "LLM API（Claude / OpenAI 兼容）", "向量检索", "SQL", "云服务基础"]
+  soft: ["中英双语演示", "跨文化协作", "写作与表达"]
+
+# 约束条件（影响 feasibility 分数）
+constraints:
+  preferred_cities: ["上海", "北京", "深圳", "杭州", "远程"]
+  acceptable_cities: ["广州", "苏州", "成都"]
+  years_experience: 1            # 用于判断 0–3 年 / 校招资格
+  can_start_from: "2026-10"
+  visa_note: "澳洲工作签证 2028-03 到期；2027 年计划回澳。签证细节以注册移民代理意见为准。"
+
+# 长期目标：影响加分项与人脉标签，不影响岗位本身的匹配
+long_term:
+  super_individual: true
+  au_return_year: 2027
+  au_bridge_bonus: true           # 中澳双足迹公司加分
+  opc_direction: "面向澳洲中小企业的 AI 流程改造 / FDE 服务"
+  content_channels: ["公众号/小红书（中文）", "LinkedIn（英文）", "GitHub"]
+
+# 已有的公开作品（social proof）。空也没关系，系统会在日报里提醒你每周补一个。
+proof_assets: []

@@ -1,0 +1,45 @@
+# 信息来源清单：哪里找 JD、哪里找团队动态、哪里找人。
+# 只做公开信息的检索与记录；不批量抓取、不存储敏感个人信息；所有触达由人手动发送。
+jobs:
+  official:
+    - {name: "阿里巴巴招聘", url: "https://talent.alibaba.com"}
+    - {name: "字节跳动招聘", url: "https://jobs.bytedance.com"}
+    - {name: "腾讯招聘", url: "https://careers.tencent.com"}
+    - {name: "百度招聘", url: "https://talent.baidu.com"}
+    - {name: "华为招聘", url: "https://career.huawei.com"}
+    - {name: "蚂蚁集团招聘", url: "https://talent.antgroup.com"}
+  aggregators:
+    - {name: "BOSS 直聘", url: "https://www.zhipin.com", note: "岗位真实度高，但要看 JD 全文而非标题"}
+    - {name: "猎聘", url: "https://www.liepin.com"}
+    - {name: "拉勾", url: "https://www.lagou.com"}
+    - {name: "牛客", url: "https://www.nowcoder.com", note: "校招 / 内推码 / 面经"}
+    - {name: "实习僧", url: "https://www.shixiseng.com"}
+    - {name: "小红书", url: "https://www.xiaohongshu.com", note: "搜『内推 + 公司名 + 解决方案』常有一手信息"}
+    - {name: "LinkedIn", url: "https://www.linkedin.com", note: "外企在华岗位与 AU 团队岗位"}
+
+team_signals:
+  tech_media: ["机器之心", "量子位", "InfoQ 中国", "36氪", "晚点 LatePost", "甲子光年", "虎嗅", "雷峰网"]
+  wechat_accounts: ["阿里云开发者", "火山引擎开发者社区", "腾讯云开发者", "百度智能云", "智谱", "Dify"]
+  conferences: ["QCon", "ArchSummit", "AICon", "云栖大会", "火山引擎 FORCE 原动力大会", "WAIC", "腾讯全球数字生态大会", "百度 Create"]
+  podcasts: ["OnBoard!", "42章经", "硬地骇客", "三五环", "AI 炼金术"]
+  communities: ["即刻", "知乎", "掘金", "B站", "GitHub", "飞书社区", "Dify 社区"]
+
+people:
+  where:
+    - {channel: "脉脉", how: "按公司 + 职级 + 关键词（解决方案/售前/Agent）搜，看动态和认证信息"}
+    - {channel: "LinkedIn", how: "外企在华、海归、AU 团队；看 Experience 中的团队名"}
+    - {channel: "会议演讲", how: "议程页面上的『演讲人 + 团队』是最准确的团队归属信息"}
+    - {channel: "公众号 / 技术博客", how: "署名文章 = 这个人愿意公开表达，回复率更高"}
+    - {channel: "GitHub", how: "开源仓库的 maintainer；贡献一个 PR 是最暖的敲门方式"}
+    - {channel: "知乎 / 即刻", how: "回答里提到自己团队在做什么的人"}
+    - {channel: "校友 / 同乡 / 海归群", how: "澳洲校友会、海归群：天然的 affinity"}
+    - {channel: "猎头", how: "专注 AI 方向的猎头也是一条路径（尤其外企）"}
+  role_priority: ["hiring_manager", "team_lead", "senior_ic", "exec", "employee", "recruiter"]
+
+outreach_channels:
+  - {channel: "脉脉私信", limit: "免费额度有限；文案 ≤ 150 字", best_for: "国内大厂"}
+  - {channel: "LinkedIn 邀请附言", limit: "≤ 300 字符", best_for: "外企 / 海归 / AU"}
+  - {channel: "微信", limit: "需先获得联系方式（活动/社群/介绍）", best_for: "已建立对话后"}
+  - {channel: "邮件", limit: "正式；适合外企与咨询", best_for: "外企 / 咨询"}
+  - {channel: "知乎 / 即刻 / 公众号留言", limit: "公开场合，先评论后私信", best_for: "内容型的人"}
+  - {channel: "GitHub Issue / PR", limit: "必须有实际贡献", best_for: "开源团队"}
