@@ -1,0 +1,232 @@
+{
+ "title": "AI-Native 建造者手册：12 小时飞行版",
+ "front_matter_file": "README.md",
+ "parts": [
+  "Part 0 · 总纲：判断力的操作系统",
+  "Part I · 机器的底座：AI-native 讲法的计算机基础",
+  "Part II · 模型：LLM 底层机制",
+  "Part III · 把模型接到任务上",
+  "Part IV · 设计 harness：从使用者到设计者",
+  "Part V · FDE：根据公司背景整合出最合适的架构",
+  "Part VI · 长线战略与操演"
+ ],
+ "chapters": [
+  {
+   "id": "00",
+   "part": "Part 0 · 总纲：判断力的操作系统",
+   "title": "判断力是唯一的护城河：这本手册怎么用、分层诊断模型、验证三法",
+   "est_minutes": 25,
+   "file": "00-judgment-os.md"
+  },
+  {
+   "id": "01",
+   "part": "Part I · 机器的底座：AI-native 讲法的计算机基础",
+   "title": "一段代码跑起来时到底发生了什么：process、memory、filesystem、shell、环境与依赖",
+   "est_minutes": 28,
+   "file": "01-machine-runtime.md"
+  },
+  {
+   "id": "02",
+   "part": "Part I · 机器的底座：AI-native 讲法的计算机基础",
+   "title": "网络与 HTTP：一个请求的一生——状态码、超时、重试、幂等、CORS、流式",
+   "est_minutes": 30,
+   "file": "02-network-http.md"
+  },
+  {
+   "id": "03",
+   "part": "Part I · 机器的底座：AI-native 讲法的计算机基础",
+   "title": "前端：浏览器是一台不可信的客户端——DOM、渲染、state、async、hydration",
+   "est_minutes": 28,
+   "file": "03-frontend.md"
+  },
+  {
+   "id": "04",
+   "part": "Part I · 机器的底座：AI-native 讲法的计算机基础",
+   "title": "后端服务与 API：契约、边界、状态、并发与错误处理",
+   "est_minutes": 30,
+   "file": "04-backend-api.md"
+  },
+  {
+   "id": "05",
+   "part": "Part I · 机器的底座：AI-native 讲法的计算机基础",
+   "title": "数据建模与数据库基础：关系模型、schema、索引、事务、ORM",
+   "est_minutes": 30,
+   "file": "05-database-basics.md"
+  },
+  {
+   "id": "06",
+   "part": "Part I · 机器的底座：AI-native 讲法的计算机基础",
+   "title": "数据库在生产环境怎么坏：锁、慢查询、连接池、迁移、复制延迟、备份与恢复",
+   "est_minutes": 40,
+   "file": "06-database-production.md"
+  },
+  {
+   "id": "07",
+   "part": "Part I · 机器的底座：AI-native 讲法的计算机基础",
+   "title": "缓存、队列、并发与分布式：系统怎么变快、怎么丢东西、怎么不一致",
+   "est_minutes": 32,
+   "file": "07-cache-queue-distributed.md"
+  },
+  {
+   "id": "08",
+   "part": "Part I · 机器的底座：AI-native 讲法的计算机基础",
+   "title": "工程闭环与可观测性：git、测试、CI/CD、部署、日志与 trace——让 AI 的产出可验证、可回滚、可诊断",
+   "est_minutes": 30,
+   "file": "08-engineering-loop-observability.md"
+  },
+  {
+   "id": "09",
+   "part": "Part I · 机器的底座：AI-native 讲法的计算机基础",
+   "title": "安全与身份：认证、授权、边界，以及 AI 时代的新攻击面",
+   "est_minutes": 30,
+   "file": "09-security.md"
+  },
+  {
+   "id": "10",
+   "part": "Part II · 模型：LLM 底层机制",
+   "title": "LLM 底层 I：token、embedding、attention、KV cache、context window——从机制推出能力边界",
+   "est_minutes": 32,
+   "file": "10-llm-mechanics.md"
+  },
+  {
+   "id": "11",
+   "part": "Part II · 模型：LLM 底层机制",
+   "title": "LLM 底层 II：预训练、后训练、RLHF/RLVR 与 scaling——模型为什么会幻觉、谄媚、拒绝",
+   "est_minutes": 28,
+   "file": "11-llm-training.md"
+  },
+  {
+   "id": "12",
+   "part": "Part II · 模型：LLM 底层机制",
+   "title": "推理与经济学：sampling、latency、batching、prompt caching、structured output 与 tool calling 的机制",
+   "est_minutes": 26,
+   "file": "12-inference-economics.md"
+  },
+  {
+   "id": "13",
+   "part": "Part III · 把模型接到任务上",
+   "title": "Context engineering：模型到底看到了什么、你怎么控制它看到什么",
+   "est_minutes": 28,
+   "file": "13-context-engineering.md"
+  },
+  {
+   "id": "14",
+   "part": "Part III · 把模型接到任务上",
+   "title": "Workflow vs Agent：决策图、agent loop 的解剖、状态、终止条件与成本",
+   "est_minutes": 30,
+   "file": "14-workflow-vs-agent.md"
+  },
+  {
+   "id": "15",
+   "part": "Part III · 把模型接到任务上",
+   "title": "Agent 失败模式图鉴：循环、目标漂移、假完成、工具误用、context 腐烂",
+   "est_minutes": 28,
+   "file": "15-agent-failure-modes.md"
+  },
+  {
+   "id": "16",
+   "part": "Part III · 把模型接到任务上",
+   "title": "RAG：检索是一个系统问题，不是一个模型问题——全链路与失效方式",
+   "est_minutes": 30,
+   "file": "16-rag.md"
+  },
+  {
+   "id": "17",
+   "part": "Part III · 把模型接到任务上",
+   "title": "微调、蒸馏与量化：三者的关系、机制与何时该做（大多数时候不该）",
+   "est_minutes": 28,
+   "file": "17-finetune-distill-quantize.md"
+  },
+  {
+   "id": "18",
+   "part": "Part IV · 设计 harness：从使用者到设计者",
+   "title": "Harness 架构设计：system prompt、tools、permissions、hooks、memory、context 管理、沙箱、检查点与人类介入",
+   "est_minutes": 34,
+   "file": "18-harness-architecture.md"
+  },
+  {
+   "id": "19",
+   "part": "Part IV · 设计 harness：从使用者到设计者",
+   "title": "Skills 的边界判定：什么该是 skill、tool、prompt、代码还是模型",
+   "est_minutes": 26,
+   "file": "19-skills-boundaries.md"
+  },
+  {
+   "id": "20",
+   "part": "Part IV · 设计 harness：从使用者到设计者",
+   "title": "多 agent 编排：subagents、context 隔离、任务分解与协调失败",
+   "est_minutes": 22,
+   "file": "20-multi-agent.md"
+  },
+  {
+   "id": "21",
+   "part": "Part IV · 设计 harness：从使用者到设计者",
+   "title": "Evals 与可观测性：没有 eval 的 AI 应用只是在赌，没有 trace 的 agent 无法诊断",
+   "est_minutes": 28,
+   "file": "21-evals-observability.md"
+  },
+  {
+   "id": "22",
+   "part": "Part IV · 设计 harness：从使用者到设计者",
+   "title": "按层诊断：AI / agent 出问题时的排查总图、案例集与\"何时换层\"的判据",
+   "est_minutes": 34,
+   "file": "22-layered-diagnosis.md"
+  },
+  {
+   "id": "23",
+   "part": "Part V · FDE：根据公司背景整合出最合适的架构",
+   "title": "读一家公司：业务、数据、权力、痛点——FDE 的 discovery 与诊断",
+   "est_minutes": 32,
+   "file": "23-fde-discovery.md"
+  },
+  {
+   "id": "24",
+   "part": "Part V · FDE：根据公司背景整合出最合适的架构",
+   "title": "设计合成：buy/build、架构适配、最小可落地系统、成功指标与真正落地",
+   "est_minutes": 36,
+   "file": "24-fde-design-synthesis.md"
+  },
+  {
+   "id": "25",
+   "part": "Part V · FDE：根据公司背景整合出最合适的架构",
+   "title": "案例推演集：四家公司从 discovery 到落地完整走一遍",
+   "est_minutes": 36,
+   "file": "25-fde-cases.md"
+  },
+  {
+   "id": "26",
+   "part": "Part VI · 长线战略与操演",
+   "title": "判断力的训练系统：刻意练习、复盘、决策日志——把知识变成判断力",
+   "est_minutes": 26,
+   "file": "26-training-system.md"
+  },
+  {
+   "id": "27",
+   "part": "Part VI · 长线战略与操演",
+   "title": "OPC + FDE + 自媒体：三条线互相喂养的飞轮与前 24 个月路线",
+   "est_minutes": 30,
+   "file": "27-opc-fde-media.md"
+  },
+  {
+   "id": "28",
+   "part": "Part VI · 长线战略与操演",
+   "title": "通往硬件、机器人与世界模型：哪些能力迁移、哪些必须重学、现在就该铺的基础",
+   "est_minutes": 30,
+   "file": "28-hardware-robotics-world-models.md"
+  },
+  {
+   "id": "29",
+   "part": "Part VI · 长线战略与操演",
+   "title": "哲学与路线：解放与集中人类思想——把终极目的接到每天的技术选择上",
+   "est_minutes": 18,
+   "file": "29-philosophy-and-route.md"
+  },
+  {
+   "id": "30",
+   "part": "Part VI · 长线战略与操演",
+   "title": "操演集：纸上推演案例 + 90 天落地 Lab",
+   "est_minutes": 40,
+   "file": "30-drills-and-lab.md"
+  }
+ ]
+}
