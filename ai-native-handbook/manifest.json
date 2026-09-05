@@ -8,7 +8,8 @@
   "Part III · 把模型接到任务上",
   "Part IV · 设计 harness：从使用者到设计者",
   "Part V · FDE：根据公司背景整合出最合适的架构",
-  "Part VI · 长线战略与操演"
+  "Part VI · 长线战略与操演",
+  "附录 · 个人化战略推演"
  ],
  "chapters": [
   {
@@ -227,6 +228,13 @@
    "title": "操演集：纸上推演案例 + 90 天落地 Lab",
    "est_minutes": 40,
    "file": "30-drills-and-lab.md"
+  },
+  {
+   "id": "A",
+   "part": "附录 · 个人化战略推演",
+   "title": "你的战略推演：中国先落地、澳洲后收割的双边 FDE 路线",
+   "est_minutes": 30,
+   "file": "31-appendix-a-personal-strategy.md"
   }
  ]
 }
