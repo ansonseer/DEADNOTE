@@ -1,0 +1,37 @@
+[
+  {
+    "name": "星桥智能（示例）",
+    "aliases": ["Starbridge AI (demo)"],
+    "tier": 3, "hq": "上海", "au_footprint": false,
+    "why": "虚构的企业 Agent 平台公司，用来演示 Tier 3 服务商的作战卡。",
+    "careers_url": "https://example.com/starbridge/careers",
+    "teams": [
+      {"name": "企业 Agent 解决方案团队", "bu": "企业事业部", "direction": "agent", "confidence": 0.6,
+       "description": "面向制造与零售客户交付 Agent / 知识库项目。"}
+    ]
+  },
+  {
+    "name": "南岸云（示例）",
+    "aliases": ["Southbank Cloud (demo)"],
+    "tier": 1, "hq": "杭州", "au_footprint": true,
+    "why": "虚构的云厂商，在悉尼有 ANZ 团队，用来演示中澳双足迹加分。",
+    "careers_url": "https://example.com/southbank/careers",
+    "teams": [
+      {"name": "云脑平台 行业解决方案部", "bu": "智能云事业群", "direction": "industry_delivery", "confidence": 0.5,
+       "description": "金融 / 政务行业的大模型解决方案与交付。"},
+      {"name": "ANZ Solutions 团队", "bu": "国际业务", "direction": "enterprise_ai", "confidence": 0.4,
+       "description": "悉尼本地的解决方案架构团队。"}
+    ]
+  },
+  {
+    "name": "海岭科技（示例）",
+    "aliases": ["Hailing Tech (demo)"],
+    "tier": 2, "hq": "北京", "au_footprint": false,
+    "why": "虚构的大模型公司，商业化团队很小，用来演示『先找团队再找岗位』的机会。",
+    "careers_url": "https://example.com/hailing/careers",
+    "teams": [
+      {"name": "开放平台解决方案组", "bu": "商业化", "direction": "platform", "confidence": 0.45,
+       "description": "服务 API 客户的方案与技术支持。"}
+    ]
+  }
+]

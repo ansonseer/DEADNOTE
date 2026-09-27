@@ -1,0 +1,56 @@
+# 模型分工表：哪个任务交给哪个模型。
+# 原则：研究类任务（中文招聘语境、公司/团队/人物、联网查证）→ 国内模型，且用它们自带的联网搜索；
+#      记账、评分、排期 → 不用模型，代码决定（可解释、可复现）。
+# 模型 ID 会变，以各家官网"模型列表"为准；这里的注释写明了 2026-09 时的状态。
+providers:
+  kimi:
+    kind: openai_compat
+    base_url: https://api.moonshot.cn/v1        # 国内平台（人民币计费）；国际版 https://api.moonshot.ai/v1
+    model: kimi-k3                              # 2026-07 起的旗舰；kimi-k2.5 / moonshot-v1 系列已于 2026-08-31 下线
+    api_key_env: MOONSHOT_API_KEY
+    json_mode: true
+    web_search: moonshot_builtin                # 官方内置 $web_search：模型自己决定搜什么，服务端执行
+    max_search_uses: 6
+  zhipu:
+    kind: openai_compat
+    base_url: https://open.bigmodel.cn/api/paas/v4
+    model: glm-5.3                              # 旗舰；想省钱可换 glm-4.7-flash（免费）
+    api_key_env: ZHIPU_API_KEY
+    json_mode: true
+    web_search: zhipu_tool                      # chat 里带 web_search 工具，返回 web_search 结果列表
+    search_engine: search_pro                   # search_std | search_pro | search_pro_sogou | search_pro_quark
+    max_search_uses: 6
+  deepseek:
+    kind: openai_compat
+    base_url: https://api.deepseek.com
+    model: deepseek-chat                        # 非思考模式；需要深推理可换 deepseek-reasoner（无联网）
+    api_key_env: DEEPSEEK_API_KEY
+    json_mode: true
+  qwen:
+    kind: openai_compat
+    base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    model: qwen-plus
+    api_key_env: DASHSCOPE_API_KEY
+    json_mode: true
+  anthropic:
+    kind: anthropic
+    model: claude-opus-5
+    effort: high
+    max_tokens: 16000
+    api_key_env: ANTHROPIC_API_KEY
+    max_search_uses: 8                          # 服务端 web_search 工具（PF_SEARCH_PROVIDER=native 时启用）
+  mock:
+    kind: mock
+
+# 任务 → 首选 provider。找不到 key 时按 fallback_order 依次降级，最后落到 mock。
+routing:
+  title_expand: kimi          # 中文岗位名扩展（同义、黑话、校招叫法）
+  company_enrich: zhipu       # 公司 BU / 团队假设、国内语境
+  jd_classify: deepseek       # 批量给 JD 打标签（便宜、快）
+  team_research: kimi         # 联网研究：Kimi 内置搜索边搜边写；备选 zhipu（同样自带联网）
+  people_assess: zhipu        # 判断人物角色、人脉价值、为什么联系
+  fit_assess: deepseek        # 你的经历 vs JD 的重叠度判断
+  outreach_write: kimi        # 第一条私信 + follow-up（中文语感）。想用 Claude 写：改成 anthropic
+  card_write: kimi            # 作战卡里的叙述段落。想用 Claude 写：改成 anthropic
+
+fallback_order: [kimi, zhipu, deepseek, qwen, anthropic, mock]

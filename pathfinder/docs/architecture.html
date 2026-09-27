@@ -1,0 +1,458 @@
+<title>Pathfinder 系统架构</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #F3F5F8; --surface: #FFFFFF; --surface-2: #E9EDF2;
+    --ink: #1B2330; --ink-2: #4E5A69; --line: #CBD3DD; --line-2: #AEB8C5;
+    --accent: #B8352A; --accent-soft: #F6E4E1;
+    --model: #2F5A8C; --model-soft: #E3ECF6;
+    --code-ink: #1B2330;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141922; --surface: #1C2430; --surface-2: #232D3B;
+      --ink: #E6EAF0; --ink-2: #A3AEBC; --line: #33404F; --line-2: #4A5869;
+      --accent: #E4776A; --accent-soft: #3A2622;
+      --model: #7FA8DA; --model-soft: #1E2F44;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141922; --surface: #1C2430; --surface-2: #232D3B;
+    --ink: #E6EAF0; --ink-2: #A3AEBC; --line: #33404F; --line-2: #4A5869;
+    --accent: #E4776A; --accent-soft: #3A2622;
+    --model: #7FA8DA; --model-soft: #1E2F44;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+    font-size: 16px; line-height: 1.75;
+  }
+  main { max-width: 980px; margin: 0 auto; padding: 40px 24px 96px; }
+  header { padding: 8px 0 28px; border-bottom: 1px solid var(--line); margin-bottom: 40px; }
+  .eyebrow { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+  h1 { font-family: "Noto Serif SC", "Songti SC", "SimSun", serif; font-weight: 700; font-size: 38px; line-height: 1.2; margin: 10px 0 14px; text-wrap: balance; }
+  h2 { font-family: "Noto Serif SC", "Songti SC", "SimSun", serif; font-weight: 600; font-size: 24px; line-height: 1.3; margin: 56px 0 12px; text-wrap: balance; }
+  h3 { font-size: 17px; font-weight: 700; margin: 28px 0 8px; }
+  p, li { max-width: 68ch; }
+  .lede { font-size: 18px; color: var(--ink-2); margin: 0; }
+  .thesis { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px; margin-top: 22px; }
+  .thesis div { border-top: 2px solid var(--line-2); padding-top: 10px; font-size: 15px; }
+  .thesis b { display: block; font-size: 13px; letter-spacing: .06em; color: var(--ink-2); margin-bottom: 4px; }
+  .thesis .old { text-decoration: line-through; text-decoration-color: var(--accent); text-decoration-thickness: 2px; }
+  figure { margin: 22px 0 8px; }
+  .fig { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 18px 18px 10px; overflow-x: auto; }
+  .fig svg { display: block; max-width: 100%; height: auto; min-width: 640px; color: var(--ink); font-family: "Noto Sans SC", "PingFang SC", system-ui, sans-serif; }
+  figcaption { font-size: 14px; color: var(--ink-2); margin-top: 10px; max-width: 76ch; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 13px; color: var(--ink-2); margin: 10px 0 0; }
+  .legend span::before { content: ""; display: inline-block; width: 22px; height: 12px; margin-right: 8px; vertical-align: -1px; border: 1.5px solid var(--ink); background: var(--surface); }
+  .legend .l-model::before { border-style: dashed; border-color: var(--model); background: var(--model-soft); }
+  .legend .l-human::before { border-color: var(--accent); background: var(--accent-soft); }
+  .legend .l-store::before { border-radius: 8px; background: var(--surface-2); }
+  /* SVG 语义类：实线 = 代码（确定性），虚线蓝 = 模型（判断），红 = 人 */
+  .b rect, .b polygon, .b ellipse { fill: var(--surface); stroke: currentColor; stroke-width: 1.4; }
+  .m rect, .m polygon { fill: var(--model-soft); stroke: var(--model); stroke-width: 1.4; stroke-dasharray: 5 4; }
+  .h rect, .h polygon { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.6; }
+  .s rect { fill: var(--surface-2); stroke: currentColor; stroke-width: 1.4; rx: 10; }
+  .gate rect, .gate polygon { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.6; }
+  svg text { fill: currentColor; font-size: 12px; }
+  svg .t { font-weight: 700; font-size: 13px; }
+  svg .k { font-size: 11px; fill: var(--ink-2); }
+  svg .mono { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 11px; }
+  svg .a { font-size: 11px; fill: var(--accent); font-weight: 500; }
+  svg .mt { fill: var(--model); }
+  svg line, svg path.arrow, svg polyline { stroke: currentColor; stroke-width: 1.3; fill: none; }
+  svg .ar { stroke: var(--accent); }
+  svg .am { stroke: var(--model); stroke-dasharray: 5 4; }
+  svg .dash { stroke-dasharray: 4 4; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 14px 0 6px; }
+  th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+  th { font-size: 12px; letter-spacing: .06em; color: var(--ink-2); font-weight: 500; }
+  td.mono, code { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 13px; }
+  code { background: var(--surface-2); padding: 1px 5px; border-radius: 3px; }
+  pre { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; overflow-x: auto; font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 13px; line-height: 1.6; }
+  .tbl { overflow-x: auto; }
+  .num { font-variant-numeric: tabular-nums; }
+  .rule { font-size: 15px; border-left: 3px solid var(--accent); padding: 6px 16px; margin: 16px 0; background: var(--surface); }
+  .rule b { color: var(--accent); }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 32px; }
+  @media (max-width: 720px) { .thesis, .cols { grid-template-columns: 1fr; } h1 { font-size: 30px; } }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<main>
+<header>
+  <div class="eyebrow">pathfinder · 架构说明 · 2026-09</div>
+  <h1>Pathfinder 系统架构</h1>
+  <p class="lede">一个把求职做成 Forward-Deployed 工作方式的 Agent 系统：先找对团队，再找对人，再通过关系链把自己送进流程。</p>
+  <div class="thesis">
+    <div><b>它替换掉的玩法</b><span class="old">海投官网 → BOSS 批量投 → 等 HR 捞简历</span></div>
+    <div><b>它的玩法</b>研究市场 → 找到业务问题的 owner → 用作品证明能解决 → 再进入招聘流程</div>
+    <div><b>一条设计铁律</b>模型做判断，代码做记账。分数、排期、状态机全部由代码计算，模型只输出"特征 + 证据"。</div>
+    <div><b>一条安全边界</b>系统起草，人来发送。没有任何自动发消息的代码；只记录公开的职业信息。</div>
+  </div>
+</header>
+
+<h2>1 · 三层分离：判断层、记账层、呈现层</h2>
+<p>模型是概率性的，求职流程需要的是可靠的账本。所以判断和记账被硬性分开：模型的输出必须先过 JSON Schema，再进 SQLite；SQLite 里的每条判断都带来源；分数与日程只由代码产生。</p>
+<figure>
+  <div class="fig">
+  <svg viewBox="0 0 960 430" role="img" aria-label="三层架构：配置驱动判断层，判断层向模型与搜索发送 prompt 与 schema 并收回校验后的 JSON；判断层只向记账层写入带来源的特征；记账层经确定性评分与状态机生成呈现层的作战卡与日报；人阅读后亲手发送并把结果记回记账层。">
+    <defs>
+      <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker>
+      <marker id="ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker>
+      <marker id="ahm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--model)"/></marker>
+    </defs>
+    <!-- config -->
+    <g class="s"><rect x="20" y="40" width="160" height="150"/></g>
+    <text x="100" y="64" text-anchor="middle" class="t">config/*.yaml</text>
+    <text x="34" y="88" class="mono">profile   定位·经历</text>
+    <text x="34" y="106" class="mono">scoring   权重·节奏</text>
+    <text x="34" y="124" class="mono">taxonomy  岗位词典</text>
+    <text x="34" y="142" class="mono">seeds     种子公司</text>
+    <text x="34" y="160" class="mono">sources   信息来源</text>
+    <text x="34" y="178" class="mono">models    模型分工</text>
+    <!-- judgment layer -->
+    <g class="b"><rect x="230" y="40" width="400" height="150" rx="3"/></g>
+    <text x="246" y="64" class="t">判断层 · stages/</text>
+    <text x="246" y="86" class="k">11 步由代码编排，8 个判断点交给模型</text>
+    <g class="m"><rect x="246" y="100" width="82" height="26"/><rect x="336" y="100" width="82" height="26"/><rect x="426" y="100" width="82" height="26"/><rect x="516" y="100" width="98" height="26"/>
+      <rect x="246" y="136" width="82" height="26"/><rect x="336" y="136" width="82" height="26"/><rect x="426" y="136" width="82" height="26"/><rect x="516" y="136" width="98" height="26"/></g>
+    <text x="287" y="117" text-anchor="middle" class="mono mt">scan</text><text x="377" y="117" text-anchor="middle" class="mono mt">discover</text><text x="467" y="117" text-anchor="middle" class="mono mt">research</text><text x="565" y="117" text-anchor="middle" class="mono mt">people</text>
+    <text x="287" y="153" text-anchor="middle" class="mono mt">rank</text><text x="377" y="153" text-anchor="middle" class="mono mt">outreach</text><text x="467" y="153" text-anchor="middle" class="mono mt">cards</text><text x="565" y="153" text-anchor="middle" class="mono mt">brief</text>
+    <!-- models & search -->
+    <g class="m"><rect x="700" y="40" width="240" height="150"/></g>
+    <text x="716" y="64" class="t mt">模型 · llm/router</text>
+    <text x="716" y="86" class="mono">Kimi K3   研究·联网·文案</text>
+    <text x="716" y="104" class="mono">GLM-5.3   公司·人物·联网</text>
+    <text x="716" y="122" class="mono">DeepSeek  分类·匹配</text>
+    <text x="716" y="140" class="mono">Claude    可选·写作</text>
+    <text x="716" y="158" class="mono">mock      离线跑通</text>
+    <text x="716" y="180" class="k">搜索：native / zhipu / bocha / packet</text>
+    <!-- arrows config -> judgment -->
+    <line x1="180" y1="115" x2="228" y2="115" marker-end="url(#ah)"/>
+    <text x="204" y="106" text-anchor="middle" class="k">读</text>
+    <!-- judgment <-> models -->
+    <line x1="630" y1="96" x2="698" y2="96" marker-end="url(#ahm)" class="am"/>
+    <text x="664" y="88" text-anchor="middle" class="k">prompt + schema</text>
+    <line x1="698" y1="150" x2="632" y2="150" marker-end="url(#ahm)" class="am"/>
+    <text x="664" y="168" text-anchor="middle" class="k">JSON（校验后）</text>
+    <!-- record layer -->
+    <g class="s"><rect x="230" y="240" width="400" height="76"/></g>
+    <text x="246" y="262" class="t">记账层 · db.py（SQLite）</text>
+    <text x="246" y="282" class="mono">companies teams jobs signals people</text>
+    <text x="246" y="300" class="mono">opportunities touchpoints tasks assets runs</text>
+    <line x1="430" y1="190" x2="430" y2="238" marker-end="url(#ah)"/>
+    <text x="440" y="218" class="k">只写"特征 + 证据"，每条带 URL</text>
+    <!-- presentation layer -->
+    <g class="b"><rect x="230" y="360" width="400" height="50" rx="3"/></g>
+    <text x="246" y="382" class="t">呈现层 · templates/</text>
+    <text x="246" y="400" class="k">Top 10 作战卡 · 作战日报 · 触达文案</text>
+    <line x1="430" y1="316" x2="430" y2="358" marker-end="url(#ah)"/>
+    <text x="440" y="342" class="k">确定性评分 · 状态机 · 排期</text>
+    <!-- human -->
+    <g class="h"><rect x="700" y="240" width="240" height="170"/></g>
+    <text x="716" y="264" class="t">你</text>
+    <text x="716" y="286" class="k">亲手发送私信、录入人物、</text>
+    <text x="716" y="304" class="k">执行 packet 里的研究、决定阶段</text>
+    <text x="716" y="334" class="mono">pf crm touch</text>
+    <text x="716" y="352" class="mono">pf people add</text>
+    <text x="716" y="370" class="mono">pf packet ingest</text>
+    <text x="716" y="388" class="mono">pf crm stage</text>
+    <line x1="630" y1="385" x2="698" y2="385" marker-end="url(#ah)"/>
+    <text x="664" y="377" text-anchor="middle" class="k">起草</text>
+    <path class="arrow ar" d="M 700 300 L 660 300 L 660 278 L 632 278" marker-end="url(#ahr)"/>
+    <text x="664" y="270" text-anchor="middle" class="a">记回</text>
+  </svg>
+  </div>
+  <figcaption>图 1 · 三层分离。判断层与模型之间只走「prompt + schema → 校验后的 JSON」；判断层与记账层之间只走「带 URL 的特征」；记账层与呈现层之间只走确定性计算。人处在呈现层之后：系统起草，人发送，人再把结果记回账本。</figcaption>
+  <div class="legend"><span>代码（确定性）</span><span class="l-model">模型（判断）</span><span class="l-human">人（发送、录入、决策）</span><span class="l-store">数据 / 配置</span></div>
+</figure>
+
+<h2>2 · 11 步流水线</h2>
+<p>步骤顺序由代码写死，对应你提出的 workflow：市场扫描 → 公司筛选 → 岗位发现 → 团队研究 → 业务背景 → 找人 → 判断人脉价值 → 个性化触达 → 内推 → 跟进 → 面试。找人这一步刻意留给人：脉脉、LinkedIn、会议议程、公众号署名。</p>
+<figure>
+  <div class="fig">
+  <svg viewBox="0 0 1000 300" role="img" aria-label="11 步流水线分两行：扫描、筛选、岗位发现、团队研究、业务背景、找人；人脉价值、评分、触达文案、作战卡、跟进内推面试。跟进的结果回流到评分，重新排序。每步标注由代码、模型还是人完成，以及对应的命令。">
+    <defs>
+      <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker>
+      <marker id="ahr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker>
+    </defs>
+    <!-- row 1 -->
+    <g class="b"><rect x="20" y="40" width="140" height="58" rx="3"/><rect x="180" y="40" width="140" height="58" rx="3"/></g>
+    <g class="m"><rect x="340" y="40" width="140" height="58"/><rect x="500" y="40" width="140" height="58"/><rect x="660" y="40" width="140" height="58"/></g>
+    <g class="h"><rect x="820" y="40" width="160" height="58"/></g>
+    <text x="90" y="62" text-anchor="middle" class="t">1 市场扫描</text><text x="90" y="82" text-anchor="middle" class="mono">pf scan</text>
+    <text x="250" y="62" text-anchor="middle" class="t">2 公司筛选</text><text x="250" y="82" text-anchor="middle" class="mono">scoring/screen</text>
+    <text x="410" y="62" text-anchor="middle" class="t">3 岗位发现</text><text x="410" y="82" text-anchor="middle" class="mono">pf discover</text>
+    <text x="570" y="62" text-anchor="middle" class="t">4 团队研究</text><text x="570" y="82" text-anchor="middle" class="mono">pf research</text>
+    <text x="730" y="62" text-anchor="middle" class="t">5 业务背景</text><text x="730" y="82" text-anchor="middle" class="mono">为什么需要这类人</text>
+    <text x="900" y="62" text-anchor="middle" class="t">6 找人</text><text x="900" y="82" text-anchor="middle" class="mono">pf people add</text>
+    <line x1="160" y1="69" x2="178" y2="69" marker-end="url(#ah2)"/>
+    <line x1="320" y1="69" x2="338" y2="69" marker-end="url(#ah2)"/>
+    <line x1="480" y1="69" x2="498" y2="69" marker-end="url(#ah2)"/>
+    <line x1="640" y1="69" x2="658" y2="69" marker-end="url(#ah2)"/>
+    <line x1="800" y1="69" x2="818" y2="69" marker-end="url(#ah2)"/>
+    <text x="410" y="118" text-anchor="middle" class="k">Kimi 扩叫法 · DeepSeek 打标签</text>
+    <text x="570" y="134" text-anchor="middle" class="k">Kimi / GLM 联网 · 信号带 URL</text>
+    <text x="900" y="118" text-anchor="middle" class="k">找人清单 → 脉脉 / LinkedIn / 议程</text>
+    <!-- wrap arrow -->
+    <path class="arrow" d="M 900 98 L 900 140 L 100 140 L 100 168" marker-end="url(#ah2)"/>
+    <!-- row 2 -->
+    <g class="m"><rect x="20" y="170" width="140" height="58"/></g>
+    <g class="b"><rect x="180" y="170" width="140" height="58" rx="3"/></g>
+    <g class="m"><rect x="340" y="170" width="140" height="58"/><rect x="500" y="170" width="140" height="58"/></g>
+    <g class="h"><rect x="660" y="170" width="160" height="58"/></g>
+    <g class="b"><rect x="840" y="170" width="140" height="58" rx="3"/></g>
+    <text x="90" y="192" text-anchor="middle" class="t">7 人脉价值</text><text x="90" y="212" text-anchor="middle" class="mono">pf people assess</text>
+    <text x="250" y="192" text-anchor="middle" class="t">8 评分排序</text><text x="250" y="212" text-anchor="middle" class="mono">pf rank</text>
+    <text x="410" y="192" text-anchor="middle" class="t">9 触达文案</text><text x="410" y="212" text-anchor="middle" class="mono">pf outreach</text>
+    <text x="570" y="192" text-anchor="middle" class="t">10 作战卡</text><text x="570" y="212" text-anchor="middle" class="mono">pf cards</text>
+    <text x="740" y="192" text-anchor="middle" class="t">11 发送 · 跟进 · 内推</text><text x="740" y="212" text-anchor="middle" class="mono">pf crm touch</text>
+    <text x="910" y="192" text-anchor="middle" class="t">日报</text><text x="910" y="212" text-anchor="middle" class="mono">pf brief</text>
+    <line x1="160" y1="199" x2="178" y2="199" marker-end="url(#ah2)"/>
+    <line x1="320" y1="199" x2="338" y2="199" marker-end="url(#ah2)"/>
+    <line x1="480" y1="199" x2="498" y2="199" marker-end="url(#ah2)"/>
+    <line x1="640" y1="199" x2="658" y2="199" marker-end="url(#ah2)"/>
+    <line x1="820" y1="199" x2="838" y2="199" marker-end="url(#ah2)"/>
+    <text x="20" y="248" class="k">GLM：角色 · hook · 潜力 · 标签</text>
+    <text x="250" y="248" text-anchor="middle" class="k">Fit Score → A1/A2/B/C</text>
+    <text x="410" y="248" text-anchor="middle" class="k">首条 + 2 次 follow-up</text>
+    <text x="740" y="248" text-anchor="middle" class="k">状态机推进关系与路径等级</text>
+    <!-- feedback loop -->
+    <path class="arrow ar" d="M 740 228 L 740 276 L 250 276 L 250 230" marker-end="url(#ahr2)"/>
+    <text x="495" y="270" text-anchor="middle" class="a">每次触点后重新评分：路径等级涨，排序变</text>
+  </svg>
+  </div>
+  <figcaption>图 2 · 流水线与反馈环。前 10 步产出作战卡；第 11 步的每一次触点都会改变人物的关系与路径等级，回流到评分，让 Top 10 随真实进展重排。</figcaption>
+</figure>
+
+<h2>3 · 一次模型调用的解剖</h2>
+<p>系统里没有"让模型自由发挥"的调用。每个任务都有四件套：prompt、JSON Schema、mock、ingest。路由器负责选模型、追加 schema、校验、纠错重试、记账。</p>
+<figure>
+  <div class="fig">
+  <svg viewBox="0 0 960 210" role="img" aria-label="router.call 的七步：选 provider、组 prompt 并追加 schema、调模型、抠出 JSON、温和修正并校验、入库、记录 runs 表；校验失败时把错误原文喂回模型重试一次。">
+    <defs><marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker>
+    <marker id="ahr3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker></defs>
+    <g class="b"><rect x="20" y="50" width="130" height="60" rx="3"/><rect x="176" y="50" width="130" height="60" rx="3"/></g>
+    <g class="m"><rect x="332" y="50" width="130" height="60"/></g>
+    <g class="b"><rect x="488" y="50" width="130" height="60" rx="3"/><rect x="644" y="50" width="140" height="60" rx="3"/></g>
+    <g class="s"><rect x="810" y="50" width="130" height="60"/></g>
+    <text x="85" y="74" text-anchor="middle" class="t">1 选 provider</text><text x="85" y="94" text-anchor="middle" class="k">routing → key → mock</text>
+    <text x="241" y="74" text-anchor="middle" class="t">2 组 prompt</text><text x="241" y="94" text-anchor="middle" class="k">材料 + 用途 + schema</text>
+    <text x="397" y="74" text-anchor="middle" class="t mt">3 调模型</text><text x="397" y="94" text-anchor="middle" class="k">可带联网工具</text>
+    <text x="553" y="74" text-anchor="middle" class="t">4 抠 JSON</text><text x="553" y="94" text-anchor="middle" class="k">容忍围栏与废话</text>
+    <text x="714" y="74" text-anchor="middle" class="t">5 修正 + 校验</text><text x="714" y="94" text-anchor="middle" class="k">类型 · 枚举 · 必填</text>
+    <text x="875" y="74" text-anchor="middle" class="t">6 入库</text><text x="875" y="94" text-anchor="middle" class="k">ingest → SQLite</text>
+    <line x1="150" y1="80" x2="174" y2="80" marker-end="url(#ah3)"/>
+    <line x1="306" y1="80" x2="330" y2="80" marker-end="url(#ah3)"/>
+    <line x1="462" y1="80" x2="486" y2="80" marker-end="url(#ah3)"/>
+    <line x1="618" y1="80" x2="642" y2="80" marker-end="url(#ah3)"/>
+    <line x1="784" y1="80" x2="808" y2="80" marker-end="url(#ah3)"/>
+    <path class="arrow ar" d="M 714 110 L 714 150 L 397 150 L 397 112" marker-end="url(#ahr3)"/>
+    <text x="556" y="144" text-anchor="middle" class="a">校验失败：把错误原文喂回去，重试一次</text>
+    <path class="arrow" d="M 875 110 L 875 150 L 840 150" marker-end="url(#ah3)"/>
+    <text x="835" y="176" text-anchor="end" class="k">runs 表：provider · tokens · 耗时 · 成败</text>
+    <text x="20" y="196" class="k">Claude 走 output_config.format（JSON 语法有保证）；国内模型走 json_object（只保证是 JSON，不保证字段对）—— 所以第 5 步不是锦上添花。</text>
+  </svg>
+  </div>
+  <figcaption>图 3 · router.call。模型只在第 3 步出现；其余六步都是代码，也正是这六步让模型的输出变成可以记账的数据。</figcaption>
+</figure>
+
+<h2>4 · 模型分工</h2>
+<p>研究类任务全部交给国内模型，并用它们自带的联网搜索：Kimi 的内置 <code>$web_search</code>、智谱的 <code>web_search</code> 工具。Claude 是可选项，想让它写私信只需改一行配置。所有模型 ID 以各家官网为准，配置里写明了 2026-09 的状态。</p>
+<div class="tbl">
+<table>
+  <tr><th>任务</th><th>首选</th><th>联网</th><th>为什么</th></tr>
+  <tr><td>title_expand 岗位叫法扩展</td><td class="mono">kimi · kimi-k3</td><td>—</td><td>国内招聘黑话、平台命名习惯</td></tr>
+  <tr><td>company_enrich 公司 / 团队假设</td><td class="mono">zhipu · glm-5.3</td><td>—</td><td>国内公司组织常识</td></tr>
+  <tr><td>jd_classify 批量给 JD 打标签</td><td class="mono">deepseek · deepseek-chat</td><td>—</td><td>便宜、快、JSON 稳定</td></tr>
+  <tr><td>team_research 团队画像</td><td class="mono">kimi · kimi-k3</td><td>$web_search 内置工具</td><td>模型自己决定搜什么，服务端执行，最多 6 次</td></tr>
+  <tr><td>people_assess 人物价值</td><td class="mono">zhipu · glm-5.3</td><td>web_search 工具</td><td>判断角色、hook、路径潜力，可顺手查证</td></tr>
+  <tr><td>fit_assess 经历重叠</td><td class="mono">deepseek · deepseek-chat</td><td>—</td><td>保守评估，不讨好</td></tr>
+  <tr><td>outreach_write 私信</td><td class="mono">kimi（可改 anthropic）</td><td>—</td><td>中文语感；Claude 备选</td></tr>
+  <tr><td>card_write 作战卡叙述</td><td class="mono">kimi（可改 anthropic）</td><td>—</td><td>压缩成可执行的段落</td></tr>
+</table>
+</div>
+<p class="rule"><b>降级顺序</b> kimi → zhipu → deepseek → qwen → anthropic → mock。缺哪个 key 就跳过哪个，<code>pf status</code> 会显示每个任务实际落到了谁。</p>
+
+<h2>5 · 证据规则与 packet 循环</h2>
+<p>让模型"凭印象"写团队近况，得到的是看起来对的错话。研究阶段因此只有三条路，且都以 URL 为门槛。</p>
+<figure>
+  <div class="fig">
+  <svg viewBox="0 0 960 330" role="img" aria-label="研究一家公司的三条路径：模型能联网则边搜边写；否则若有搜索 API 则先搜证据再综合；否则导出 packet 交给人或 Claude Code 完成后导入。三条路都经过同一道门：每条信号必须有 URL，置信度达到 0.6 才标记为已验证。">
+    <defs><marker id="ah4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker>
+    <marker id="ahr4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker></defs>
+    <g class="b"><rect x="20" y="130" width="130" height="50" rx="3"/></g>
+    <text x="85" y="151" text-anchor="middle" class="t">研究一家公司</text><text x="85" y="169" text-anchor="middle" class="mono">pf research</text>
+    <!-- decision 1 -->
+    <g class="b"><polygon points="250,155 320,110 390,155 320,200"/></g>
+    <text x="320" y="151" text-anchor="middle" class="t">模型能联网？</text><text x="320" y="168" text-anchor="middle" class="k">provider=native</text>
+    <line x1="150" y1="155" x2="248" y2="155" marker-end="url(#ah4)"/>
+    <!-- yes branch -->
+    <g class="m"><rect x="470" y="30" width="200" height="50"/></g>
+    <text x="570" y="51" text-anchor="middle" class="t mt">模型边搜边写</text><text x="570" y="69" text-anchor="middle" class="k">Kimi · GLM · Claude 自带联网</text>
+    <path class="arrow" d="M 320 110 L 320 55 L 468 55" marker-end="url(#ah4)"/>
+    <text x="330" y="100" class="k">是</text>
+    <!-- decision 2 -->
+    <g class="b"><polygon points="250,270 320,225 390,270 320,315"/></g>
+    <text x="320" y="266" text-anchor="middle" class="t">有搜索 API？</text><text x="320" y="283" text-anchor="middle" class="k">zhipu · bocha · tavily</text>
+    <line x1="320" y1="200" x2="320" y2="223" marker-end="url(#ah4)"/>
+    <text x="330" y="216" class="k">否</text>
+    <g class="b"><rect x="470" y="130" width="200" height="50" rx="3"/></g>
+    <text x="570" y="151" text-anchor="middle" class="t">先搜证据，再喂给模型</text><text x="570" y="169" text-anchor="middle" class="k">queries 表记录搜过什么</text>
+    <path class="arrow" d="M 390 270 L 430 270 L 430 155 L 468 155" marker-end="url(#ah4)"/>
+    <text x="400" y="262" class="k">是</text>
+    <g class="h"><rect x="470" y="230" width="200" height="70"/></g>
+    <text x="570" y="252" text-anchor="middle" class="t">导出 packet</text>
+    <text x="570" y="270" text-anchor="middle" class="k">prompt + schema → 你 / Claude Code</text>
+    <text x="570" y="288" text-anchor="middle" class="mono">pf packet ingest</text>
+    <path class="arrow ar" d="M 320 315 L 320 328 L 440 328 L 440 265 L 468 265" marker-end="url(#ahr4)"/>
+    <text x="345" y="324" class="a">否：不调模型</text>
+    <!-- gate -->
+    <g class="gate"><rect x="705" y="120" width="150" height="90"/></g>
+    <text x="780" y="146" text-anchor="middle" class="t">证据门</text>
+    <text x="780" y="166" text-anchor="middle" class="a">无 URL 的信号丢弃</text>
+    <text x="780" y="184" text-anchor="middle" class="a">置信度 ≥ 0.6 才 verified</text>
+    <line x1="670" y1="55" x2="690" y2="55" /><path class="arrow" d="M 690 55 L 690 150 L 703 150" marker-end="url(#ah4)"/>
+    <line x1="670" y1="155" x2="703" y2="155" marker-end="url(#ah4)"/>
+    <line x1="670" y1="265" x2="690" y2="265" /><path class="arrow" d="M 690 265 L 690 160 L 703 160" marker-end="url(#ah4)"/>
+    <g class="s"><rect x="870" y="130" width="80" height="70"/></g>
+    <text x="910" y="158" text-anchor="middle" class="t">teams</text><text x="910" y="176" text-anchor="middle" class="t">signals</text>
+    <line x1="855" y1="165" x2="868" y2="165" marker-end="url(#ah4)"/>
+    <text x="780" y="232" text-anchor="middle" class="k">未验证的团队在评分里方向分 ×0.7</text>
+  </svg>
+  </div>
+  <figcaption>图 4 · 证据规则。没有联网、没有搜索 API、又不是 mock 时，系统宁可导出 packet 让人完成，也不让模型编。三条路的产物都要过同一道证据门。</figcaption>
+</figure>
+
+<h2>6 · 数据模型</h2>
+<p>表的顺序就是漏斗的顺序。一个"机会"是公司 × 团队 × 岗位，岗位可以为空，因为解决方案岗的 headcount 往往不公开挂出，先找对团队再问。</p>
+<figure>
+  <div class="fig">
+  <svg viewBox="0 0 960 330" role="img" aria-label="数据模型：companies 拥有多个 teams、jobs、people；teams 拥有 signals；opportunities 关联公司、团队、岗位与首选联系人；opportunities 与 people 产生 touchpoints 与 tasks；assets 记录公开作品；runs 与 queries 记录模型调用与搜索。">
+    <defs><marker id="ah5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+    <g class="s">
+      <rect x="20" y="40" width="150" height="66"/><rect x="250" y="40" width="150" height="66"/><rect x="480" y="40" width="150" height="66"/>
+      <rect x="480" y="140" width="150" height="56"/><rect x="240" y="160" width="170" height="66"/>
+      <rect x="700" y="90" width="170" height="86"/>
+      <rect x="640" y="240" width="140" height="56"/><rect x="800" y="240" width="140" height="56"/>
+      <rect x="20" y="160" width="150" height="56"/><rect x="20" y="250" width="150" height="56"/>
+    </g>
+    <text x="95" y="62" text-anchor="middle" class="t">companies</text><text x="95" y="80" text-anchor="middle" class="k">tier · au_footprint</text><text x="95" y="96" text-anchor="middle" class="k">status: pilot / bench</text>
+    <text x="325" y="62" text-anchor="middle" class="t">teams</text><text x="325" y="80" text-anchor="middle" class="k">direction · verified</text><text x="325" y="96" text-anchor="middle" class="k">research JSON</text>
+    <text x="555" y="62" text-anchor="middle" class="t">jobs</text><text x="555" y="80" text-anchor="middle" class="k">category 1/2/3 · features</text><text x="555" y="96" text-anchor="middle" class="k">fit JSON · verified</text>
+    <text x="555" y="162" text-anchor="middle" class="t">signals</text><text x="555" y="180" text-anchor="middle" class="k">kind · url · date · strength</text>
+    <text x="325" y="182" text-anchor="middle" class="t">people</text><text x="325" y="200" text-anchor="middle" class="k">role_type · path_level 0–5</text><text x="325" y="216" text-anchor="middle" class="k">relationship · tags · 给予/索取</text>
+    <text x="785" y="112" text-anchor="middle" class="t">opportunities</text><text x="785" y="130" text-anchor="middle" class="k">fit_score · tier A1/A2/B/C</text><text x="785" y="146" text-anchor="middle" class="k">stage（状态机）</text><text x="785" y="162" text-anchor="middle" class="k">breakdown · outreach · narrative</text>
+    <text x="710" y="262" text-anchor="middle" class="t">touchpoints</text><text x="710" y="280" text-anchor="middle" class="k">channel · kind · direction</text>
+    <text x="870" y="262" text-anchor="middle" class="t">tasks</text><text x="870" y="280" text-anchor="middle" class="k">due_at · priority</text>
+    <text x="95" y="182" text-anchor="middle" class="t">assets</text><text x="95" y="200" text-anchor="middle" class="k">poc · post · talk · repo</text>
+    <text x="95" y="272" text-anchor="middle" class="t">runs · queries</text><text x="95" y="290" text-anchor="middle" class="k">成本 · 命中，用于评估</text>
+    <line x1="170" y1="73" x2="248" y2="73" marker-end="url(#ah5)"/><text x="209" y="65" text-anchor="middle" class="k">1 : n</text>
+    <line x1="400" y1="73" x2="478" y2="73" marker-end="url(#ah5)"/><text x="439" y="65" text-anchor="middle" class="k">1 : n</text>
+    <line x1="400" y1="90" x2="478" y2="160" marker-end="url(#ah5)"/><text x="425" y="140" class="k">1 : n</text>
+    <line x1="325" y1="106" x2="325" y2="158" marker-end="url(#ah5)"/><text x="334" y="136" class="k">1 : n（同团队）</text>
+    <line x1="95" y1="106" x2="240" y2="185" marker-end="url(#ah5)"/><text x="150" y="150" class="k">1 : n</text>
+    <line x1="630" y1="73" x2="698" y2="110" marker-end="url(#ah5)"/><text x="668" y="78" text-anchor="middle" class="k">job（可空）</text>
+    <line x1="410" y1="193" x2="698" y2="150" marker-end="url(#ah5)"/><text x="560" y="205" text-anchor="middle" class="k">person：首选联系人</text>
+    <line x1="785" y1="176" x2="722" y2="238" marker-end="url(#ah5)"/><text x="730" y="215" text-anchor="end" class="k">1 : n</text>
+    <line x1="800" y1="176" x2="860" y2="238" marker-end="url(#ah5)"/><text x="850" y="215" class="k">1 : n</text>
+    <line x1="170" y1="188" x2="238" y2="188" class="dash"/><text x="209" y="181" text-anchor="middle" class="k">评分 +2</text>
+  </svg>
+  </div>
+  <figcaption>图 5 · 数据模型。companies → teams → jobs / signals → people → opportunities → touchpoints / tasks。runs 与 queries 不参与业务，只用来回答"系统在变好吗"。</figcaption>
+</figure>
+
+<h2>7 · CRM 状态机与人脉路径</h2>
+<p>你记一笔触点，状态机负责其余：关系、路径等级、机会阶段、下一条待办。没有任何一步需要你手动改状态。</p>
+<figure>
+  <div class="fig">
+  <svg viewBox="0 0 1000 330" role="img" aria-label="上排是机会的 12 个阶段；下排是人物关系从冷到支持者的五个状态与路径等级 L1 到 L5；触点事件（首条私信、回复、会议、请求内推、内推）推进下排状态并同步推进上排阶段；计时器在 60 小时、7 天、24 小时、5 天后生成待办。">
+    <defs><marker id="ah6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker>
+    <marker id="ahr6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker></defs>
+    <text x="20" y="34" class="k">机会阶段 opportunities.stage</text>
+    <g class="b">
+      <rect x="20" y="44" width="72" height="34" rx="3"/><rect x="102" y="44" width="72" height="34" rx="3"/><rect x="184" y="44" width="72" height="34" rx="3"/><rect x="266" y="44" width="72" height="34" rx="3"/>
+      <rect x="348" y="44" width="72" height="34" rx="3"/><rect x="430" y="44" width="72" height="34" rx="3"/><rect x="512" y="44" width="72" height="34" rx="3"/><rect x="594" y="44" width="72" height="34" rx="3"/>
+      <rect x="676" y="44" width="72" height="34" rx="3"/><rect x="758" y="44" width="72" height="34" rx="3"/><rect x="840" y="44" width="72" height="34" rx="3"/><rect x="922" y="44" width="58" height="34" rx="3"/>
+    </g>
+    <text x="56" y="66" text-anchor="middle">已识别</text><text x="138" y="66" text-anchor="middle">已研究</text><text x="220" y="66" text-anchor="middle">找到人</text><text x="302" y="66" text-anchor="middle">文案就绪</text>
+    <text x="384" y="66" text-anchor="middle">已联系</text><text x="466" y="66" text-anchor="middle">已回复</text><text x="548" y="66" text-anchor="middle">对话中</text><text x="630" y="66" text-anchor="middle">已问内推</text>
+    <text x="712" y="66" text-anchor="middle">已内推</text><text x="794" y="66" text-anchor="middle">已投递</text><text x="876" y="66" text-anchor="middle">面试中</text><text x="951" y="66" text-anchor="middle">Offer</text>
+    <line x1="92" y1="61" x2="100" y2="61"/><line x1="174" y1="61" x2="182" y2="61"/><line x1="256" y1="61" x2="264" y2="61"/><line x1="338" y1="61" x2="346" y2="61"/><line x1="420" y1="61" x2="428" y2="61"/><line x1="502" y1="61" x2="510" y2="61"/><line x1="584" y1="61" x2="592" y2="61"/><line x1="666" y1="61" x2="674" y2="61"/><line x1="748" y1="61" x2="756" y2="61"/><line x1="830" y1="61" x2="838" y2="61"/><line x1="912" y1="61" x2="920" y2="61"/>
+    <text x="20" y="128" class="k">人物关系 people.relationship · 路径等级 path_level</text>
+    <g class="b"><rect x="20" y="140" width="120" height="50" rx="3"/><rect x="260" y="140" width="120" height="50" rx="3"/><rect x="500" y="140" width="120" height="50" rx="3"/><rect x="740" y="140" width="120" height="50" rx="3"/></g>
+    <g class="h"><rect x="880" y="140" width="100" height="50"/></g>
+    <text x="80" y="160" text-anchor="middle" class="t">冷 / 已联系</text><text x="80" y="178" text-anchor="middle" class="mono">L1 冷联系</text>
+    <text x="320" y="160" text-anchor="middle" class="t">已回复</text><text x="320" y="178" text-anchor="middle" class="mono">L2 普通内推</text>
+    <text x="560" y="160" text-anchor="middle" class="t">温热</text><text x="560" y="178" text-anchor="middle" class="mono">L3 warm / L4 HM 推荐</text>
+    <text x="800" y="160" text-anchor="middle" class="t">支持者</text><text x="800" y="178" text-anchor="middle" class="mono">L5 Sponsor（HM）</text>
+    <text x="930" y="160" text-anchor="middle" class="t">暂停</text><text x="930" y="178" text-anchor="middle" class="k">2 次无回复</text>
+    <line x1="140" y1="165" x2="258" y2="165" marker-end="url(#ah6)"/><text x="199" y="157" text-anchor="middle" class="mono">reply</text>
+    <line x1="380" y1="165" x2="498" y2="165" marker-end="url(#ah6)"/><text x="439" y="157" text-anchor="middle" class="mono">call / meeting</text>
+    <line x1="620" y1="165" x2="738" y2="165" marker-end="url(#ah6)"/><text x="679" y="157" text-anchor="middle" class="mono">referral</text>
+    <path class="arrow ar" d="M 80 190 L 80 220 L 930 220 L 930 192" marker-end="url(#ahr6)"/>
+    <text x="505" y="214" text-anchor="middle" class="a">followup ×2 无回复 → parked，日报提示换同团队另一人</text>
+    <!-- vertical links to stages -->
+    <path class="arrow dash" d="M 60 140 L 60 100 L 384 100 L 384 80" marker-end="url(#ah6)"/><text x="230" y="94" text-anchor="middle" class="mono">first_msg → 已联系</text>
+    <path class="arrow dash" d="M 320 140 L 320 112 L 466 112 L 466 80" marker-end="url(#ah6)"/><text x="400" y="106" text-anchor="middle" class="mono">reply → 已回复</text>
+    <path class="arrow dash" d="M 560 140 L 560 118 L 548 118 L 548 80" marker-end="url(#ah6)"/>
+    <path class="arrow dash" d="M 800 140 L 800 112 L 712 112 L 712 80" marker-end="url(#ah6)"/><text x="760" y="106" text-anchor="middle" class="mono">referral → 已内推</text>
+    <!-- timers -->
+    <g class="s"><rect x="20" y="250" width="960" height="62"/></g>
+    <text x="36" y="272" class="t">计时器（scoring.yaml / cadence）</text>
+    <text x="36" y="296" class="mono">first_msg +60h → follow-up 1（给价值）   followup +7d → follow-up 2（收尾）   reply +24h → 推进   ask +5d → 确认内推   meeting +24h → 感谢 + 一个价值</text>
+  </svg>
+  </div>
+  <figcaption>图 6 · 状态机。下排每一次事件都会同步推进上排的机会阶段，并按计时器生成待办；人脉账户（给予 / 索取）另行计数，索取多于给予时日报会提醒先给价值。</figcaption>
+</figure>
+
+<h2>8 · Fit Score 怎么算</h2>
+<p>分数只用来排序和解释，不用来预测。每一项都能在作战卡的"评分拆解"里追溯到证据。</p>
+<div class="tbl">
+<table>
+  <tr><th>维度</th><th class="num">满分</th><th>算法</th><th>特征来自</th></tr>
+  <tr><td>岗位贴合 role_match</td><td class="num">30</td><td class="mono">role_match/10 × 类别优先级</td><td>jd_classify；无岗位时按团队方向估</td></tr>
+  <tr><td>团队方向 team_direction</td><td class="num">20</td><td class="mono">方向系数 × (已验证 1.0 / 未验证 0.7)</td><td>team_research</td></tr>
+  <tr><td>经历重叠 experience_overlap</td><td class="num">20</td><td class="mono">overlap/10</td><td>fit_assess，读 profile.yaml</td></tr>
+  <tr><td>进入可行性 feasibility</td><td class="num">15</td><td class="mono">0.7×资历/10 + 0.3×城市系数</td><td>jd_classify + 城市偏好</td></tr>
+  <tr><td>人脉路径 path</td><td class="num">15</td><td class="mono">0.6×当前等级 + 0.4×可达等级</td><td>people.path_level + 评估的潜力</td></tr>
+  <tr><td>加分</td><td class="num">+7</td><td class="mono">中澳双足迹 +3 · 30 天内新信号 +2 · 已有作品 +2</td><td>companies / signals / assets</td></tr>
+</table>
+</div>
+<p>分层：A1 ≥ 85 今天就发；A2 75–84 本周补齐条件；B 60–74 有余力再做；C 记录在案。</p>
+
+<h2>9 · 载体选型：为什么不是 Coze，也不需要 Cursor</h2>
+<div class="tbl">
+<table>
+  <tr><th>东西</th><th>它是什么</th><th>在这个系统里的位置</th></tr>
+  <tr><td>Coze / 扣子</td><td>低代码 bot 平台</td><td>不用。以后可做"把日报推到飞书"的壳</td></tr>
+  <tr><td>Dify</td><td>开源工作流 / Agent 平台</td><td>第二阶段可选；会用它本身是简历信号</td></tr>
+  <tr><td>Cursor</td><td>带 AI 的 IDE</td><td>与 Claude Code 同类，二选一即可</td></tr>
+  <tr><td>Claude Code</td><td>带文件 / 终端 / 搜索的编码 agent</td><td>建造者，也是 packet 模式下的研究员</td></tr>
+  <tr><td>Kimi / GLM / DeepSeek API</td><td>国内模型，前两者自带联网</td><td>研究主力，配置即换</td></tr>
+  <tr><td>Claude API 工具循环 / Agent SDK</td><td>自主 agent 的运行时</td><td>研究阶段想完全自主时再上</td></tr>
+</table>
+</div>
+<p class="rule"><b>结论</b> 先把流程做对，再谈载体。现在是 Python CLI + Claude Code 当操作员 + 国内模型 API；载体是最后才需要决定的事。</p>
+
+<h2>10 · 代码地图</h2>
+<pre>pathfinder/
+├── config/          profile · scoring · taxonomy · seeds · sources · models   ← 改这里，不改代码
+├── pathfinder/
+│   ├── db.py        记账层：SQLite 十一张表 + 迁移
+│   ├── schemas.py   八个任务的 JSON Schema + 校验器
+│   ├── llm/         router（路由·校验·重试·记账）· providers（Kimi/GLM/DeepSeek/Claude/mock）· prompts · mock
+│   ├── search.py    zhipu · bocha · tavily · serper · none；native 由 provider 自己联网
+│   ├── packets.py   把任务打成 Markdown 交给人 / Claude Code，再 ingest 回来
+│   ├── stages/      scan · discover · research · people · rank · outreach · cards · brief
+│   ├── crm.py       状态机 · 触点 · 计时器 · 人脉账户 · 漏斗指标
+│   └── cli.py       pf 命令
+├── templates/       作战卡 · 日报 · 触达文案框架
+├── examples/demo/   虚构示例数据（mock 跑通全流程）
+├── tests/           端到端 + 联网接口的假客户端测试
+└── docs/            00 手册 · 01 Agent 设计课 · 02 评分 · 03 找人 · 04 文案 · 05 两周 Pilot · 06 长期战略 · 07 架构</pre>
+</main>

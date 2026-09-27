@@ -1,0 +1,10 @@
+# 运行时数据：真实公司/岗位/人物/触达记录，永远不要提交到 git
+data/*
+!data/.gitkeep
+.env
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.pytest_cache/

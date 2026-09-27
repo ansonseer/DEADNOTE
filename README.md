@@ -61,3 +61,9 @@ What I leave behind will stand as the **burning fuel** of my individual passage 
 ---
 
 *23 → 30*
+
+---
+
+## Side project / 副项目
+
+- [pathfinder/](./pathfinder/) — 中国 AI 求职情报 + 人脉路径 + 内推 + CRM 系统（Forward-Deployed 风格的求职 Agent）。
